@@ -1,0 +1,32 @@
+{
+  "name": "urank",
+  "version": "2.0.0",
+  "description": "urank",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "vows && echo",
+    "prepublish": "npm test && rm -f src/start.js && bin/start > src/start.js && smash src/urank.js > urank.js"
+  },
+  "author": "Cecilia di Sciascio",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "ssh://cdisciascio@git.know-center.tugraz.at:29418/~cdisciascio/urank.git"
+  },
+  "keywords": [
+    "ranking",
+    "visualization"
+  ],
+  "devDependencies": {
+    "smash": "0.0.15",
+    "uglifyjs": "^2.4.11",
+    "vows": "^0.8.1",
+    "webpack": "^3.5.6"
+  },
+  "dependencies": {
+    "d3": "^4.10.2"
+  }
+}
