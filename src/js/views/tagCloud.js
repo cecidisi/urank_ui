@@ -30,6 +30,7 @@ var TagCloud = (function() {
                 onTagInCloudMouseEnter: function(index){},
                 onTagInCloudMouseLeave: function(index){},
                 onTagInCloudClick: function(index){},
+                onKeyphraseSelected: function(phrases){},
                 onKeywordEntered: function(keyword){},
                 onTagFrequencyChanged: function(min, max){},
                 onTagClickedChange: function(index){}
@@ -160,7 +161,6 @@ var TagCloud = (function() {
         return this;
     };
 
-
     var _focusTag = function(keyword) {
         this.tagcloud.focusTag(keyword);
     };
@@ -169,14 +169,16 @@ var TagCloud = (function() {
         this.tagcloud.showTagsWithinRange(min, max);
     };
 
+    var _showKeyphrases = function(index, id, keyphrases){
+        this.tagcloud.showKeyphrases(index, id, keyphrases);
+    };
+
     var _clearEffects = function() {
         if(this.tagcloud) this.tagcloud.clearEffects();
         return this;
     };
 
-
     var _clear = function() {
-
         if(this.tagcloud) {
             $tagFreqSlider.slider('destroy');
             $tagInput.val('').autocomplete('destroy');
@@ -205,6 +207,7 @@ var TagCloud = (function() {
         updateClonOfDroppedTag: _updateClonOfDroppedTag,
         focusTag: _focusTag,
         showTagsWithinRange: _showTagsWithinRange,
+        showKeyphrases: _showKeyphrases,
         clearEffects: _clearEffects,
         clear: _clear,
         destroy: _destroy
