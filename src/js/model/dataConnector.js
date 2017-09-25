@@ -1,17 +1,21 @@
+var utils = require('../helper/utils')
 
 DataConnector = (function(){
 	var _this;
 
 	function DataConnector(options){
 		this.urls = options.urls;
+		this.path_to_results = options.path_to_results;
 		_this = this;
 	}
+
 
 	var sendRequest = function(options, onDone, onFail){
 		var request_options = $.extend(true, {
 			'url' : '',
 			'type': 'GET'
 		}, options);
+		console.log(request_options);
 		onDone = onDone || function(data){};
 		onFail = onFail || function(){};
 		if(!request_options.url || request_options.url === '') return { 'message': 'No URL set' };
@@ -24,31 +28,11 @@ DataConnector = (function(){
 	    }).done(function(resp) {
 	        timelapse = $.now() - timelapse
 	        console.log('DataConnector: successful request ' + request_options.type + ' ' + request_options.url + ' (' + timelapse + ' ms)');
-        	console.log(resp.results.length);    
-	        onDone(resp.results);
+	        onDone(utils.getDeepVal(resp, _this.path_to_results));
 	    });
 
 	};
 
-	var getData = function(onDone) {
-		sendRequest({ url: _this.urls.get_data }, onDone);
-	};
-
-	var getKeywords = function(onDone) {
-		sendRequest({ url: _this.urls.get_keywords }, onDone);
-	};
-
-	var getTags = function(onDone){
-		sendRequest({ url: _this.urls.get_tags }), onDone;
-	};
-
-	var getUsertags = function(onDone){
-		sendRequest({ url: _this.urls.get_usertags }, onDone);
-	};
-
-	var getNeighbors = function(onDone){
-		sendRequest({ url: _this.urls.get_neighbors }, onDone);
-	};
 
 	var postUrank = function(url, data, onDone){
 		console.log('DataConnector: Start request --> ' + data.operation);
@@ -59,6 +43,39 @@ DataConnector = (function(){
 			'contentType': 'application/json; charset=utf-8'
 		}, onDone);
 	}
+
+	var replaceParamsInUrl = function(url, params) {
+		if(!url) return;
+		Object.keys(params).forEach(function(key){
+			url = url.replace('['+key+']', params[key])
+		})
+		return url;
+	}
+
+
+	/*********************************************************/
+	/******			   Prototype Methods 				 *****/
+	/*********************************************************/
+
+	var getData = function(onDone) {
+		sendRequest({ 'url': _this.urls.get_data }, onDone);
+	};
+
+	var getKeywords = function(onDone) {
+		sendRequest({ 'url': _this.urls.get_keywords }, onDone);
+	};
+
+	var getTags = function(onDone){
+		sendRequest({ 'url': _this.urls.get_tags }), onDone;
+	};
+
+	var getUsertags = function(onDone){
+		sendRequest({ 'url': _this.urls.get_usertags }, onDone);
+	};
+
+	var getNeighbors = function(onDone){
+		sendRequest({ 'url': _this.urls.get_neighbors }, onDone);
+	};
 
 	var updateRanking = function(params, onDone) {
 		var url = this.urls.urank || this.urls.update_ranking;
@@ -79,10 +96,20 @@ DataConnector = (function(){
 	};
 
 	var getDocumentDetails = function(params, onDone){
-		var url = this.urls.urank || this.urls.get_document_details;
-		var data = $.extend(true, { 'operation': 'get_document_details' }, params);
-		postUrank(url, data, onDone);
+		if(this.urls.get_document_details) {
+			var url = replaceParamsInUrl(this.urls.get_document_details, params)
+			sendRequest({ 'url': url }, onDone)
+		} else if(this.urls.urank) {
+			var url = this.urls.urank;
+			var data = $.extend(true, { 'operation': 'get_document_details' }, params);
+			postUrank(url, data, onDone);
+		}
 	};
+
+	var getKeyphrases = function(params, onDone){
+		var url = replaceParamsInUrl(this.urls.get_keyphrases, params);		
+		sendRequest({ 'url': url }, onDone)
+	}
 
 
 	DataConnector.prototype = {
@@ -91,6 +118,7 @@ DataConnector = (function(){
 		getTags: getTags,
 		getUsertags: getUsertags,
 		getNeighbors: getNeighbors,
+		getKeyphrases: getKeyphrases,
 		updateRanking: updateRanking,
 		clearRanking, clearRanking,
 		showMoreRanking : showMoreRanking,

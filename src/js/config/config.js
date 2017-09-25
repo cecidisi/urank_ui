@@ -11,6 +11,23 @@ var Config = {
         usertagBox: '',
         neighborscloudRoot: ''
     },
+    // FETCH DATA 
+    dataConnector : {
+        urls :{
+            get_data: null,             // GET
+            get_keywords: null,         // GET
+            get_tags: null,             // GET
+            get_usertags: null,         // GET
+            get_neighbors: null,        // GET
+            urank: null,                // POST if this one is used, the following 3 are ignored
+            update_ranking: null,       // POST
+            clear_ranking: null,        // POST
+            show_more_ranking: null,    // POST
+            get_document_details: null  // POST
+        },
+        path_to_results: 'results'      // Path to results in ajax response object
+    },
+    // FEATURES
     features: {
         keywords: true,
         usertags: false,
@@ -94,7 +111,10 @@ var Config = {
         tagStyle: 'word',               // word || badge
         highlight: 'background',        // body || background
         minFontSize : 12,               // in px    
-        fontSizeGrowth: 0.1           // minFontSize + fontSizeGrowth * keyword.score (df) 
+        fontSizeGrowth: 0.1,           // minFontSize + fontSizeGrowth * keyword.score (df) 
+        aes: {
+            hideScrollbar: false
+        }
     },
     // USERTAG BOX
     usertagBox: {
@@ -170,21 +190,6 @@ var Config = {
         query: colorbrewer.Set1[9], //.splice(colorbrewer.Set1[9].indexOf("#ffff33"), 1, "#ffd700"), 
         usertag: ['#4daf4a'], //  ['#ffa32f']
         neighbor: ['#4daf4a']
-    },
-    // FETCH DATA 
-    dataConnector : {
-        urls :{
-            get_data: null,             // GET
-            get_keywords: null,         // GET
-            get_tags: null,             // GET
-            get_usertags: null,         // GET
-            get_neighbors: null,        // GET
-            urank: null,                // POST if this one is used, the following 3 are ignored
-            update_ranking: null,       // POST
-            clear_ranking: null,        // POST
-            show_more_ranking: null,    // POST
-            get_document_details: null  // POST
-        }
     },
     // CALLBACKS
     callbacks : {

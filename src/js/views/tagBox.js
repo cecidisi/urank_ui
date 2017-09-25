@@ -107,7 +107,7 @@ var TagBox = (function(){
                 slide: function(event, ui) {
                     var $tag  = $(this.parentNode);
                     var color = $tag.data('queryTermColor');
-                    $tag.css("background", "rgba("+ utils.hexToR(color) + ', ' + utils.hexToG(color) + ', ' + utils.hexToB(color) + "," + ui.value + ")");
+                    $tag.css("background", utils.hexToRGBA(color, ui.value));
                 },
                 stop: function(event, ui) {
                     var index =  $(this.parentNode).attr('tag-pos'),
@@ -274,55 +274,55 @@ var getTagPrefix = function(tag){
     tag = { index, stem, term, color }
 */
     var _appendTag = function(tag){
-        var prefix = getTagPrefix(tag)
-        var $tag = $(prefix + '' + tag.id + '-clon');
-
-        //if ($tag.hasClass(s.droppableClass)) {
+        var $tag;
+        if(tag.is_new) {
+            $tag = $('<div/>', { 
+                'id': tag.id,
+                'class': tagInBoxClass,
+                'html': tag.name
+            }).appendTo($tagContainer)
+        } else {
+            var prefix = getTagPrefix(tag)
+            $tag = $(prefix + '' + tag.id + '-clon');
             // Append dragged/clicked tag to tag box, refactor classes
             $tag = $tag.detach().appendTo($tagContainer)
                 .removeClass().addClass(tagInBoxClass);
-            // Append "delete" button
-            $('<span></span>').appendTo($tag).addClass(tagDeleteButtonClass);
-            // Add new div to make it a slider
-            var weightSlider = $("<div class='" + tagWeightsliderClass + "'></div>").appendTo($tag)
-                .slider($.extend(true, s.ui.sliderOptions, {
-                    slide: function(event, ui) {
-                        // var $tag  = $(this.parentNode);
-                        var color = $tag.data('queryTermColor');
-                        $tag.css("background", "rgba("+ utils.hexToR(color) + ', ' + utils.hexToG(color) + ', ' + utils.hexToB(color) + "," + ui.value + ")");
-                    },
-                    stop: function(event, ui) {
-                        // var tag ={
-                        //     index: $tag.attr('tag-pos'),
-                        //     id: $tag.attr('tag-id'),
-                        //     weight: ui.value   
-                        // };
-                        console.log(tag);
-                        tag.weight = ui.value
-                        s.cb.onTagWeightChanged.call(this, tag);
-                    }
-                }));
-            weightSlider.find('.ui-slider-range')
-                .addClass(weightSliderRangeClass)
-                .css('background', tag.color);
-            weightSlider.find('.ui-slider-handle')
-                .addClass(weightSliderHandleClass);
-            // Retrieve color in weightColorScale for the corresponding label
-            var rgbSequence = utils.hexToR(tag.color) + ', ' + utils.hexToG(tag.color) + ', ' + utils.hexToB(tag.color);
-            // Set tag's style
-            $tag.data('queryTermColor', tag.color).css({
-                background: 'rgba(' + rgbSequence + ', 1)',
-                color: '',
-                border: 'solid 1px ' + tag.color
-            }).off().on({
-                mouseenter: s.cb.onTagInBoxMouseEnter(tag.index, tag.id),
-                mouseleave: s.cb.onTagInBoxMouseLeave(tag.index, tag.id),
-                click: s.cb.onTagInBoxClick(tag.index, tag.id)
-            }).on('click', '.'+tagDeleteButtonClass, function(event){  //  Event handler for delete button
-                    event.stopPropagation();
-                    s.cb.onTagDeleted.call(this, tag);
-            });
-        //}
+        }
+
+        // Append "delete" button
+        $('<span/>').appendTo($tag).addClass(tagDeleteButtonClass);
+        // Add new div to make it a slider
+        var weightSlider = $("<div class='" + tagWeightsliderClass + "'></div>").appendTo($tag)
+            .slider($.extend(true, s.ui.sliderOptions, {
+                slide: function(event, ui) {
+                    var color = $tag.data('queryTermColor');
+                    $tag.css("background", utils.hexToRGBA(color, ui.value));
+                },
+                stop: function(event, ui) {
+                    console.log(tag);
+                    tag.weight = ui.value
+                    s.cb.onTagWeightChanged.call(this, tag);
+                }
+            }));
+        weightSlider.find('.ui-slider-range')
+            .addClass(weightSliderRangeClass)
+            .css('background', tag.color);
+        weightSlider.find('.ui-slider-handle')
+            .addClass(weightSliderHandleClass);
+        // Set tag's style
+        $tag.data('queryTermColor', tag.color).css({
+            background: utils.hexToRGBA(tag.color),
+            color: '',
+            border: 'solid 1px ' + tag.color
+        }).off().on({
+            mouseenter: s.cb.onTagInBoxMouseEnter(tag.index, tag.id),
+            mouseleave: s.cb.onTagInBoxMouseLeave(tag.index, tag.id),
+            click: s.cb.onTagInBoxClick(tag.index, tag.id)
+        }).on('click', '.'+tagDeleteButtonClass, function(event){  //  Event handler for delete button
+                event.stopPropagation();
+                s.cb.onTagDeleted.call(this, tag);
+        });
+
         this.refresh();
         return this;
     };

@@ -131,7 +131,6 @@ var NeighborsCloud = (function(){
 		tooltipTimeout = setTimeout(function(){
 			var tag = _this.neighbors[index];
 			addTooltip(tag, $tag);
-			
 			$tooltip.fadeIn();
 			fadeOutTimeOut = setTimeout(function(){
 			    $tooltip.fadeOut();

@@ -64,6 +64,12 @@ module.exports = {
     hexToB: function (h) {
         return parseInt((this.cutHex(h)).substring(4, 6), 16)
     },
+
+    hexToRGBA: function(h, alpha){
+        alpha = alpha || 1;
+        return "rgba("+ this.hexToR(h) + ',' + this.hexToG(h) + ',' + this.hexToB(h) + ',' + alpha + ')'
+    },
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * format gradient string
@@ -94,6 +100,26 @@ module.exports = {
             return '-o-linear-gradient(top, ' + original + ', ' + lighter + ', ' + original + ')';
         }
         return '-webkit-linear-gradient(top, ' + original + ', ' + lighter + ', ' + original + ')';
+    },
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Search in variables
+     *
+     * */
+
+    getDeepVal: function(obj, path) {
+        if (!path || path === '')
+            return obj;
+
+        var attrs = path.split('.')
+        var value = obj
+        for(var i=0; i < attrs.length; i++) {
+            if(value[attrs[i]] == undefined)
+                return undefined;
+            value = value[attrs[i]]
+        }
+        return value;
     }
 
 

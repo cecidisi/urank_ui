@@ -10,6 +10,7 @@ var TagCloudDefault = (function(){
     var tagcloudDefaultClass = 'urank-tagcloud-default',
         hiddenScrollbarClass = 'urank-hidden-scrollbar',
         hiddenScrollbarInnerClass = 'urank-hidden-scrollbar-inner',
+        visibleScrollbarClass = 'urank-visible-scrollbar',
         tagContainerClass = 'urank-tagcloud-tag-container',
         tagClass = 'urank-tagcloud-tag',
         activeClass = 'active',
@@ -33,15 +34,15 @@ var TagCloudDefault = (function(){
     var tagPosAttr = 'tag-pos';
     //  Helpers
     var backgroudGradient = "top, rgb(0, 102, 255), rgb(20, 122, 255), rgb(0, 102, 255)";
-    var $root = $(''), $scrollable = $(''), $tagContainer = $(''), $tooltip = $(''),
-        tooltipTimeOut, fadeOutTimeOut,
+    var $root = $(''), $scrollable = $(''), $tagContainer = $(''), $tooltip = $(''), $keyphraseDialog = $(''),
+        tooltipTimeOut, fadeOutTimeOut, kpDialogTimeOut;
 
-        tagHintPinOptions = {
+    var tagHintPinOptions = {
             document: { top: -6, right: -10, container: '.'+tagcloudDefaultClass },
             cooccurence: { bottom: -10, right: -10, container: '.'+tagcloudDefaultClass }
-        },
+        };
 
-        pieOptions = {
+    var pieOptions = {
             size: { pieOuterRadius: '100%', canvasHeight: '14', canvasWidth: '14' },
             effects: {
                 load: { effect: "none" },
@@ -76,7 +77,8 @@ var TagCloudDefault = (function(){
                 onTagInCloudMouseEnter: function(index, id){},
                 onTagInCloudMouseLeave: function(index, id){},
                 onTagInCloudClick: function(index, id){},
-                onTagSelected: function(index, id){}    // used when selction == 'click'
+                onTagSelected: function(index, id){},    // used when selction == 'click'
+                onKeyphraseSelected: function(phrases){}
             }
         }, params);
 
@@ -278,10 +280,10 @@ var TagCloudDefault = (function(){
         var index = $tag.attr(tagPosAttr);
         var id = $tag.attr('tag-id');
         $tag.off().on({
-            mousedown : function(event){ if(event.which == 1) event.stopPropagation(); },
-            mouseenter: function(event){ s.cb.onTagInCloudMouseEnter(index, id) },
-            mouseleave: function(event){ s.cb.onTagInCloudMouseLeave(index, id) },
-            click: function(event){ _tagClicked(index, id) }
+            mousedown : function(evt){ if(evt.which == 1) evt.stopPropagation(); },
+            mouseenter: function(evt){ s.cb.onTagInCloudMouseEnter(index, id) },
+            mouseleave: function(evt){ evt.stopPropagation(); s.cb.onTagInCloudMouseLeave(index, id); },
+            click: function(evt){ _tagClicked(index, id) }
         });
     
         // if it's not clon of dropped tag, add class active and make it drggable
@@ -319,7 +321,7 @@ var TagCloudDefault = (function(){
 
         // Empty tag container and add appropriate class/es
         $root = $(s.root).empty().addClass(tagcloudDefaultClass);
-
+        // Append tooltip
         $tooltip = $('<div/>').appendTo($root).addClass(tooltipClass).width($root.width() - 10);
         // $("<p><strong name='num-docs'></strong> items contain</p>").appendTo($tooltip);
         // // $("<p><strong name='num-docs'></strong> (<strong name='pctg-docs'></strong>) documents contain</p>").appendTo($tooltip);
@@ -332,11 +334,23 @@ var TagCloudDefault = (function(){
 
         $tooltip.css('top', $root.position().top - $tooltip.fullHeight()).hide();
 
-        $('<div/>').appendTo($root).addClass(hiddenScrollbarClass);
-
-        $scrollable = $('<div/>').appendTo($root).addClass(hiddenScrollbarInnerClass)
+        // Set scrollable
+        var scrollableClass = visibleScrollbarClass;
+        if(s.options.aes.hideScrollbar) {
+            $('<div/>').appendTo($root).addClass(hiddenScrollbarClass);
+            scrollableClass = hiddenScrollbarClass;
+        }
+        $scrollable = $('<div/>').appendTo($root)
+            .addClass(scrollableClass)
             .on('scroll', onRootScrolled);
-        $tagContainer = $('<div/>').appendTo($scrollable).addClass(tagContainerClass);
+        $tagContainer = $('<div/>').appendTo($scrollable)
+            .addClass(tagContainerClass).on({
+                'mouseleave': function(evt){ 
+                    evt.stopPropagation() 
+                    $('.urank-keyphrase-dialog').remove();
+                }
+            });
+        
 
         this.keywords.forEach(function(k, i){
             // Append tag
@@ -352,8 +366,8 @@ var TagCloudDefault = (function(){
                     'originalColor': _this.colorScale(k.colorCategory)
                 })
                 .html(k.term)
-                .hide()
-                .fadeIn((i+1)*20);
+                // .hide()
+                // .fadeIn((i+1)*20);
             // Pie chart section for document hint
             // var docPctg = parseInt((k.df * 100) / _this.data.length);
             // if(docPctg > 0 && docPctg < 5) { docPctg = 5; }
@@ -367,8 +381,7 @@ var TagCloudDefault = (function(){
 //            pieOptions.data.content[1].value = _this.data.length - k.df || 0.1;
 //            var tagPie = new d3pie(tagPiePrefix+''+i, pieOptions);
             // Red circle for keywords in proximity hint
-            if(k.num_keyphrases)
-                // $('<a/>', { class: keywordHintClass, 'data-content': k.num_keyphrases, href: '#' }).appendTo($tag);
+            if(k.num_keyphrases)                
                 $('<a/>', { class: keywordHintClass, 'data-content': k.df, href: '#' }).appendTo($tag);
             // Add/remove icon
             $('<a/>', { href: '#' }).appendTo($tag).addClass(addIconClass);
@@ -558,6 +571,49 @@ var TagCloudDefault = (function(){
         });
     };
 
+
+    var _showKeyphrases = function(index, id, keyphrases) {
+        console.log('Got ' + keyphrases.length + ' keyphrases');
+        console.log(keyphrases[0]);
+        var $tag = $(tagIdPrefix + '' + id);
+
+        $('.urank-keyphrase-dialog').remove();
+        $keyphraseDialog = $('<div/>', { 
+            id: 'keyphrase-tooltip', 
+            class: 'urank-keyphrase-dialog triangle-left' 
+        }).appendTo($root).on({
+            'mouseenter': function(evt){ evt.stopPropagation() }
+        });
+        // Tooltip title
+        var $titleWrapper = $('<div/>', { class: 'title-wrapper' }).appendTo($keyphraseDialog);
+        $('<div/>', { class: 'title', html: 'Phrases with '+ $tag.attr('name') }).appendTo($titleWrapper);
+        keyphrases.slice(0, 10).forEach(function(p){
+            var $feat = $('<div/>', { class: 'urank-keyphrase' }).appendTo($keyphraseDialog);
+                var fontSize = Math.min(8 + p.count, 12);
+                $('<span/>', { 
+                    name: p.phrase.replace(' ', '_'), 
+                    html: p.phrase 
+                }).appendTo($feat)
+                .css('font-size', fontSize+'px')
+                .on({ 
+                    click: function(evt){
+                        evt.stopPropagation();
+                        s.cb.onKeyphraseSelected(p);
+                    },
+                    mouseleave: function(evt){ evt.stopPropagation() }
+                }) 
+        })
+
+        $keyphraseDialog.pin({ 
+            'relativeTo': $tag,
+            'vertical-aligned': true,
+            // 'top': 0,
+            'left':  20
+        })
+
+    };
+
+
     var _clearEffects = function() {
 
         _this.selectedTag = undefined;
@@ -597,6 +653,7 @@ var TagCloudDefault = (function(){
         focusTag: _focusTag,
         updateClonOfDroppedTag: _updateClonOfDroppedTag,
         showTagsWithinRange: _showTagsWithinRange,
+        showKeyphrases: _showKeyphrases,
         clearEffects: _clearEffects,
         clear: _clear,
         destroy: _destroy

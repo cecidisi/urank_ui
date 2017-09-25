@@ -47,6 +47,20 @@ var Urank = (function() {
             // Add CALLBACK
         },
 
+        onKeyphraseSelected: function(phrase){
+            var tag = { 
+                'type': 'keyword', 
+                'id': phrase.id, 
+                'name': phrase.phrase,
+                'stem': phrase.stems, 
+                'color': getSelectedTagColor(phrase.stems, 'keyword'), 
+                'weight': 1,
+                'is_new': true
+            };
+            views.tagBox.appendTag(tag);
+
+        },
+
         onKeywordEntered: function(keyword){
             views.tagCloud.focusTag(keyword);
             callbacks.onKeywordEntered.call(this, keyword);
@@ -97,6 +111,7 @@ var Urank = (function() {
 
         onTagInCloudMouseEnter: function(index, id) {
             views.tagCloud.hoverTag(index, id);
+            URANK.loadKeyphrases(index, id);
             // var tag = { index: index, id: id, term: _this.keywords[index].term }
             // callbacks.onTagInCloudMouseEnter.call(this, tag);
         },
@@ -297,7 +312,9 @@ var Urank = (function() {
                         // details-on-demand click
                         onTagInCloudClick: EVTHANDLER.onTagInCloudClick,
                         // click to update ranking
-                        onTagSelected: EVTHANDLER.onTagSelected
+                        onTagSelected: EVTHANDLER.onTagSelected,
+                        // keyphrase clicked in dialog
+                        onKeyphraseSelected: EVTHANDLER.onKeyphraseSelected
                     }
                 },
 
@@ -448,6 +465,23 @@ var Urank = (function() {
             _this.neighbors = _neighbors
             console.log(_this.neighbors[0])
             views.neighborsCloud.build(_this.neighbors, colorScales.neighbor)
+        },
+
+        loadKeyphrases: function(index, id) {
+            console.log('keyword id = ' + id + '; term = ' + _this.keywords[index].term);            
+            // keyphrases already in memory
+            if(_this.keywords[index].phrases) {
+                console.log('In memory')
+                views.tagCloud.showKeyphrases(index, id, _this.keywords[index].phrases);
+            }
+            // Fetch keyphrases for current keyword
+            else {
+                console.log('Fetching form server')
+                dataConn.getKeyphrases({ 'kw_id': id }, function(keyphrases){
+                    views.tagCloud.showKeyphrases(index, id, keyphrases);
+                    _this.keywords[index].phrases = keyphrases;
+                })
+            }
         },
 
         // Update ranking
@@ -615,6 +649,7 @@ var Urank = (function() {
             query : getOrdinalColorScale(config.colors.query, 0)
         };
         rankingConf = config.rankingModel;
+        console.log('Ranking Configuration')
         console.log(rankingConf);
         URANK.initViews(config);
     }

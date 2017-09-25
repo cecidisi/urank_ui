@@ -9,6 +9,7 @@
                 left: 0,
                 bottom: 0,                  // only if relativeTo != 'none'
                 right: 0,                   // only if relativeTo != 'none'
+                'vertical-aligned': false,
                 container: 'window',
                 relativeTo: 'parent'        // parent | none | custom selector
             }, args);
@@ -17,13 +18,39 @@
                 var $this = $(this);
                 if($this.css('visibility') == 'visible') {
 
+                    var top, left;
                     if(options.relativeTo !== 'none') {
-                        var $parent = options.relativeTo == 'parent' ? $this.parent() : options.relativeTo;
-                        options.left = options.right ? options.left + $parent.fullOffset().left + $parent.fullWidth() + options.right : options.left + $parent.fullOffset().left;
-                        options.top = options.bottom ? options.top + $parent.fullOffset().top + $parent.fullHeight() + options.bottom : options.top + $parent.fullOffset().top;
+                        var $refElem = options.relativeTo == 'parent' ? $this.parent() : options.relativeTo;
+                        // Left offset
+                        left = options.left ? 
+                            $refElem.fullOffset().left - $this.fullWidth() - options.left:
+                            $refElem.fullOffset().left + $refElem.fullWidth() + options.right;
+                        // Top offset
+                        top = options.top ? 
+                            $refElem.fullOffset().top + options.top :
+                            $refElem.fullOffset().top + $refElem.fullHeight() + options.bottom;               
+                        // Vertical alignment
+                        if(options['vertical-aligned']) 
+                            top -= $this.fullHeight() / 2;
+                        // Pseudo element
+                        if($this.hasClass('triangle-left')) {
+
+                            $('<div/>').appendTo($this).css({
+                                // 'content': '',
+                                'left': $this.fullWidth(),
+                                'top': $this.fullHeight()/2 - 22,
+                                'width': 0,
+                                'height': 0,
+                                'position': 'absolute',
+                                'border-left': '20px solid rgba(220,220,220,.9)',
+                                'border-top': '13px solid transparent',
+                                'border-bottom': '13px solid transparent'
+                            })
+                        }
+                                    
                     }
 
-                    $this.css({ position: 'fixed', top: options.top, left: options.left, 'z-index': 9999 });
+                    $this.css({ 'position': 'fixed', 'top': top, 'left': left, 'z-index': 9999 });
 
                     if(options.container !== 'window') {
                         var $container = $(options.container),
@@ -150,7 +177,7 @@
                     root: 'body'
                 }, options);
 
-                $tooltip = $('<div></div>', { class: tooltipClass }).appendTo($this);
+                $tooltip = $('<div/>', { class: tooltipClass }).appendTo($this);
 
             }
 
