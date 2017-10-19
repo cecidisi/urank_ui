@@ -1,3 +1,6 @@
+
+var utils = require('../helper/utils')
+
 var DocViewer = (function(){
 
     var _this;
@@ -105,10 +108,11 @@ var DocViewer = (function(){
     var addField = function(field, doc){
         var field_name = field.attr.replace('.', '-')
         var attrs = field.attr.split('.')
-        var value = doc[attrs[0]]
-        for(var j=1; j < attrs.length; j++) {
-            value = value[attrs[j]]
-        }
+        // var value = doc[attrs[0]]
+        // for(var j=1; j < attrs.length; j++) {
+        //     value = value[attrs[j]]
+        // }
+        var value = utils.getDeepVal(doc, field.attr)
         $("#label-" + field_name).html(field.label);
         $("#details-" + field_name).html(value);
     };
@@ -120,7 +124,7 @@ var DocViewer = (function(){
     * @param {Array} keywords (only stems)
     */
     var _showDocument = function(doc, keywords, colorScale){
-
+        console.log(doc)
         $root.show();
         // var title = doc[s.attr.pretty_title] || doc[s.attr.title];
         $(detailItemIdPrefix + 'title').html(doc[s.attr.title]);

@@ -43,7 +43,7 @@ Document Panel (right) - for visualizing highlighted text
             color: #555;
 
             div {
-                display: block;
+                display: flex;
                 width: 100%;
                 padding: 2px 0px;
 
@@ -76,7 +76,7 @@ Document Panel (right) - for visualizing highlighted text
                 }
                 
                 span {
-                    font-size: 1em;
+                    font-size: 1.05em;
                     margin: 2px 0px;
                 }
             }

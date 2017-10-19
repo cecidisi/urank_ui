@@ -598,6 +598,7 @@ var TagCloudDefault = (function(){
                 .on({ 
                     click: function(evt){
                         evt.stopPropagation();
+                        console.log('keyphrase clicked')
                         s.cb.onKeyphraseSelected(p);
                     },
                     mouseleave: function(evt){ evt.stopPropagation() }
@@ -618,6 +619,7 @@ var TagCloudDefault = (function(){
 
         _this.selectedTag = undefined;
         _this.addedTags = [];
+        $('.urank-keyphrase-dialog').remove();
         if(_this.tagHintMode) {
             $('.'+tagClass).each(function(i, tag){
                 var $tag = $(tag);

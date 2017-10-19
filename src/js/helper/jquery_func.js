@@ -34,15 +34,14 @@
                             top -= $this.fullHeight() / 2;
                         // Pseudo element
                         if($this.hasClass('triangle-left')) {
-
+                            var color = $this.css('borderColor') || $this.css('backgroundColor') // || $this.css('backgroundColor')
                             $('<div/>').appendTo($this).css({
-                                // 'content': '',
-                                'left': $this.fullWidth(),
+                                'left': $this.fullWidth() - parseInt($this.css('border-right-width').replace('px', '')),
                                 'top': $this.fullHeight()/2 - 22,
                                 'width': 0,
                                 'height': 0,
                                 'position': 'absolute',
-                                'border-left': '20px solid rgba(220,220,220,.9)',
+                                'border-left': '20px solid ' + color,
                                 'border-top': '13px solid transparent',
                                 'border-bottom': '13px solid transparent'
                             })
