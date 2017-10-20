@@ -1,4 +1,4 @@
-require('select2');
+
 
 var FeatureSearch = (function() {
 
