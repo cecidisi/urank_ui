@@ -9,7 +9,8 @@ var Config = {
         visCanvasRoot: '',
         docViewerRoot: '',
         usertagBox: '',
-        neighborscloudRoot: ''
+        neighborscloudRoot: '',
+        searchInputRoot: ''
     },
     // FETCH DATA 
     dataConnector : {
@@ -23,7 +24,8 @@ var Config = {
             update_ranking: null,       // POST
             clear_ranking: null,        // POST
             show_more_ranking: null,    // POST
-            get_document_details: null  // POST
+            get_document_details: null, // POST
+            search_features: null       // GET
         },
         path_to_results: 'results'      // Path to results in ajax response object
     },
@@ -184,6 +186,10 @@ var Config = {
             textDecoration: 'background'
         }
     },
+    // SEARCH INPUT
+    searchInput: {
+        type: 'keyword'
+    },
     // COLOR SCALES
     colors : {
         keyword: ['#eff3ff','#c6dbef','#9ecae1','#6baed6','#4292c6'], //colorbrewer.Greys[7].slice(2, 7)
@@ -216,7 +222,8 @@ var Config = {
         onDocViewerHidden: function(){},
         onReset: function(){},
         onRankingWeightChanged: function(rsWeight){},
-        onRatingClicked: function(documentId, index, rating){}
+        onRatingClicked: function(documentId, index, rating){},
+        onFeatureSearched: function(feature_type, text){}
     }    
 };
 

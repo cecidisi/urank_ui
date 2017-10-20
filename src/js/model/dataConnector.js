@@ -109,7 +109,13 @@ DataConnector = (function(){
 	var getKeyphrases = function(params, onDone){
 		var url = replaceParamsInUrl(this.urls.get_keyphrases, params);		
 		sendRequest({ 'url': url }, onDone)
-	}
+	};
+
+
+	var searchFeature = function(params, onDone) {
+		var url = replaceParamsInUrl(this.urls.search_features, params);
+		sendRequest({ 'url': url }, onDone)
+	};
 
 
 	DataConnector.prototype = {
@@ -122,7 +128,8 @@ DataConnector = (function(){
 		updateRanking: updateRanking,
 		clearRanking, clearRanking,
 		showMoreRanking : showMoreRanking,
-		getDocumentDetails: getDocumentDetails
+		getDocumentDetails: getDocumentDetails,
+		searchFeature: searchFeature
 	};
 
 	return DataConnector;

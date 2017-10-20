@@ -93,7 +93,7 @@ var TagCloudDefault = (function(){
     $.fn.setTagStyle = function() {
         var $tag = $(this);
         var idx = parseInt($tag.attr('tag-pos'));
-        var kw = _this.keywords[idx];
+        // var kw = _this.keywords[idx];
 
         if($tag.hasClass('disabled'))
             return $tag.css({ background: '', border: '' });
@@ -103,10 +103,10 @@ var TagCloudDefault = (function(){
 
         // dropped class is always for a cloned tag
         if($tag.hasClass('dropped')) {
-            var color = $tag.data('queryColor');
+            var color = $tag.data('tagColor');
             var border = 'solid 1px ' + color;
             var bg = s.options.highlight === 'background' ? color : 'transparent';
-            var fontColor = s.options.highlight === 'background' ? 'white' : kw.color;
+            var fontColor = s.options.highlight === 'background' ? 'white' : color; // kw.color;
             return $tag.css({ 'background': bg, 'border': border, 'color': fontColor });
         }
             
@@ -118,10 +118,10 @@ var TagCloudDefault = (function(){
                 });
             } else if(s.options.tagStyle === 'word') {
                 // console.log(s.options.minFontSize + s.options.fontSizeGrowth * kw.score);
+                var tagScore = parseInt($tag.data('score'));
                 return $tag.addClass('word').css({
-                    // 'color': kw.color,
                     'color': $tag.data('originalColor'),
-                    'font-size': (s.options.minFontSize + s.options.fontSizeGrowth * kw.score) + 'px',
+                    'font-size': (s.options.minFontSize + s.options.fontSizeGrowth * tagScore) + 'px',
                     'border': '', 'background': ''
                 });
             }
@@ -363,7 +363,8 @@ var TagCloudDefault = (function(){
             }).appendTo($tagContainer)
                 .addClass(tagClass + ' ' + activeClass/* + ' hint--info hint--left'*/)
                 .data({ 
-                    'originalColor': _this.colorScale(k.colorCategory)
+                    'originalColor': _this.colorScale(k.colorCategory),
+                    'score': k.score
                 })
                 .html(k.term)
                 // .hide()
@@ -391,24 +392,59 @@ var TagCloudDefault = (function(){
     };
 
 
+    var _addTag = function(k, i, prepend, animate) {
+        prepend = prepend || false;
+        animate = animate || false;
+        k.colorCategory = 1;
+        k.color = _this.colorScale(k.colorCategory);
+        var $tag = $('<div/>', { 
+            'id': 'urank-tag-' + k.id, 
+            'class': tagClass + ' ' + activeClass,
+            'tag-id': k.id || i,
+            'tag-pos': i,
+            'name': k.term,
+            'html': k.term
+        }).data({ 
+            'originalColor': k.color,
+            'score': k.score
+        });
+        // Red circle for keywords in proximity hint
+        if(k.num_keyphrases)                
+            $('<a/>', { class: keywordHintClass, 'data-content': k.df, href: '#' }).appendTo($tag);
+        // Add/remove icon
+        $('<a/>', { href: '#' }).appendTo($tag).addClass(addIconClass);
+        // Append / prepend to container
+        if(prepend) {
+            $tag.prependTo($tagContainer)
+        } else {
+            $tag.appendTo($tagContainer)    
+        }
+        setTagProperties($tag);
+        if(animate) {
+            $tag.css({ color: 'crimson'})
+                .animate({ color: k.color }, 1500, 'swing')
+        }
+
+    };
+
 
     var _reset = function() {
         return this.build(this.keywords, this.data, this.colorScale, s.options);
     };
 
 
-    var _hoverTag = function(index, id) {
-        var $tag = $(tagIdPrefix + '' + id);
+    var _hoverTag = function(tag, index) {
+        var $tag = $(tagIdPrefix + '' + tag.id);
         if(!_this.tagHintMode && !_this.isTagBeingDragged) {
             if(!$tag.hasClass(droppedClass))
                 $tag.addClass(hoveredClass).setTagStyle();
                     //.css(tagStyle.hover);
             pinTagHints($tag);
             tooltipTimeOut = setTimeout(function(){
-                $tooltip.find("[name='num-docs']").html(_this.keywords[index].df);
-                $tooltip.find("[name='pctg-docs']").html(Math.floor(_this.keywords[index].df/_this.data.length * 100) + '%');
-                $tooltip.find("[name='tag']").html(_this.keywords[index].term.toUpperCase());
-                $tooltip.find("[name='num-kw']").html(_this.keywords[index].num_keyphrases);
+                $tooltip.find("[name='num-docs']").html(tag.df);
+                $tooltip.find("[name='pctg-docs']").html(Math.floor(tag.df/_this.data.length * 100) + '%');
+                $tooltip.find("[name='tag']").html(tag.term.toUpperCase());
+                $tooltip.find("[name='num-kw']").html(tag.num_keyphrases);
                 $tooltip.fadeIn();
                 fadeOutTimeOut = setTimeout(function(){
                     $tooltip.fadeOut();
@@ -418,8 +454,8 @@ var TagCloudDefault = (function(){
     };
 
 
-    var _unhoverTag = function(index, id) {
-        var $tag = $(tagIdPrefix + '' + id);
+    var _unhoverTag = function(tag, index) {
+        var $tag = $(tagIdPrefix + '' + tag.id);
 
         if(!_this.tagHintMode && !_this.isTagBeingDragged) {
             $tag.find('.'+documentHintClass).css('visibility', '');
@@ -506,31 +542,29 @@ var TagCloudDefault = (function(){
 	 *	Detach tag from tag box and return it to container (tag cloud)
 	 *
 	 * */
-    var _restoreTag = function(index, id){
+    var _restoreTag = function(tag, index) {
 
-        var $tag = $(tagIdPrefix + '' + id);                    // is in tagcloud
-        var $clonedTag = $(tagIdPrefix + '' + id + '-clon');    // is in tagbox, will be deleted sync
-        var $dummyTag = $clonedTag.clone();                     // need dummy for animation, clone is removed
-        $dummyTag.attr('id', 'dummy-tag-' + id);
-        console.log('Animating ' + $dummyTag.attr('id'));
-        //  Save offset in tagBox before detaching
-        var oldOffset = $clonedTag.offset();
-        var newOffset = $tag.offset();
-        // Detach tag from tag cloud, attach temporarily to body and place it in old position (in tagBox)
-        $dummyTag.appendTo('body')
-            .css({ position: 'absolute', top: oldOffset.top, left: oldOffset.left, 'z-index': 9999 });
-        // Animate tag moving from tag box to tag cloud
-        $dummyTag.animate({ top: newOffset.top, left: newOffset.left }, 800, 'swing', function() {
-            //  Detach from body after motion animation is complete and append to tag container again
-            $dummyTag.remove();
-            $tag.removeClass().addClass(tagClass + ' ' + activeClass); //.setTagStyle();
-            setTagProperties($tag);
-            // $tag = $tag.detach();
-            // $clonedTag.after($tag);
-            // $clonedTag.remove();
-            // $tag.css({ position: '', top: '', left: '', 'z-index': '' }).setTagStyle();
-            // setTagProperties($tag);
-        });
+        if(!tag.is_new) {
+            var $tag = $(tagIdPrefix + '' + tag.id);                    // is in tagcloud
+            var $clonedTag = $(tagIdPrefix + '' + tag.id + '-clon');    // is in tagbox, will be deleted sync
+            var $dummyTag = $clonedTag.clone();                     // need dummy for animation, clone is removed
+            $dummyTag.attr('id', 'dummy-tag-' + tag.id);
+            console.log('Animating ' + $dummyTag.attr('id'));
+            //  Save offset in tagBox before detaching
+            var oldOffset = $clonedTag.offset();
+            var newOffset = $tag.offset();
+            // Detach tag from tag cloud, attach temporarily to body and place it in old position (in tagBox)
+            $dummyTag.appendTo('body')
+                .css({ position: 'absolute', top: oldOffset.top, left: oldOffset.left, 'z-index': 9999 });
+            // Animate tag moving from tag box to tag cloud
+            $dummyTag.animate({ top: newOffset.top, left: newOffset.left }, 800, 'swing', function() {
+                //  Detach from body after motion animation is complete and append to tag container again
+                $dummyTag.remove();
+                $tag.removeClass().addClass(tagClass + ' ' + activeClass); //.setTagStyle();
+                setTagProperties($tag);
+            });    
+        }
+        
     };
 
 
@@ -547,9 +581,9 @@ var TagCloudDefault = (function(){
     };
 
 
-    var _updateClonOfDroppedTag = function(index, id, queryColor) {
+    var _updateClonOfDroppedTag = function(index, id, tagColor) {
         var $tag = $(tagIdPrefix + '' + id)
-            .data('queryColor', queryColor)
+            .data('tagColor', tagColor)
             .removeClass(activeClass).removeClass(disabledClass).removeClass(selectedClass)
             .addClass(droppedClass);
         $tag.setTagStyle();
@@ -582,7 +616,10 @@ var TagCloudDefault = (function(){
             id: 'keyphrase-tooltip', 
             class: 'urank-keyphrase-dialog triangle-left' 
         }).appendTo($root).on({
-            'mouseenter': function(evt){ evt.stopPropagation() }
+            mouseenter: function(evt){ evt.stopPropagation() },
+            mousedown: function(evt){ 
+                evt.stopPropagation() 
+            }
         });
         // Tooltip title
         var $titleWrapper = $('<div/>', { class: 'title-wrapper' }).appendTo($keyphraseDialog);
@@ -647,6 +684,7 @@ var TagCloudDefault = (function(){
 
     TagCloudDefault.prototype = {
         build: _build,
+        addTag: _addTag,
         reset: _reset,
         restoreTag: _restoreTag,
         hoverTag: _hoverTag,

@@ -275,14 +275,14 @@ var getTagPrefix = function(tag){
 */
     var _appendTag = function(tag){
         var $tag;
+        var prefix = getTagPrefix(tag)
         if(tag.is_new) {
             $tag = $('<div/>', { 
-                'id': tag.id,
+                'id': prefix.substr(1) + '' + tag.id,
                 'class': tagInBoxClass,
                 'html': tag.name
             }).appendTo($tagContainer)
         } else {
-            var prefix = getTagPrefix(tag)
             $tag = $(prefix + '' + tag.id + '-clon');
             // Append dragged/clicked tag to tag box, refactor classes
             $tag = $tag.detach().appendTo($tagContainer)
@@ -331,8 +331,9 @@ var getTagPrefix = function(tag){
     var _deleteTag = function(tag) {
         // fix identifier
         var prefix = getTagPrefix(tag);
-        $(prefix + '' + tag.id + '-clon').remove();
-        console.log('Deleted clon of tag with id = ' + tag.id);
+        var $tag = tag.is_new ? $(prefix + '' + tag.id) : $(prefix + '' + tag.id + '-clon');
+        $tag.remove();
+        console.log('Deleted tag from TagBox with id = ' + tag.id);
         this.refresh();
         return this;
     };

@@ -126,6 +126,10 @@ var TagCloud = (function() {
         return this;
     };
 
+    var _addTag = function(k, i, prepend, animate){
+        if(this.tagcloud) this.tagcloud.addTag(k, i, prepend, animate);
+        return this;
+    };
 
     var _reset = function() {
         if(this.tagcloud) this.tagcloud.reset();
@@ -133,20 +137,20 @@ var TagCloud = (function() {
     };
 
 
-    var _restoreTag = function(index, id){
-        if(this.tagcloud) this.tagcloud.restoreTag(index, id);
+    var _restoreTag = function(tag, index){
+        if(this.tagcloud) this.tagcloud.restoreTag(tag, index);
         return this;
     };
 
 
-    var _hoverTag = function(index, id) {
-        if(this.tagcloud) this.tagcloud.hoverTag(index, id);
+    var _hoverTag = function(tag, index) {
+        if(this.tagcloud) this.tagcloud.hoverTag(tag, index);
         return this;
     };
 
 
-    var _unhoverTag = function(index, id) {
-        if(this.tagcloud) this.tagcloud.unhoverTag(index, id);
+    var _unhoverTag = function(tag, index) {
+        if(this.tagcloud) this.tagcloud.unhoverTag(tag, index);
         return this;
     };
 
@@ -199,6 +203,7 @@ var TagCloud = (function() {
 
     TagCloud.prototype = {
         build: _build,
+        addTag: _addTag,
         reset: _reset,
         restoreTag: _restoreTag,
         hoverTag: _hoverTag,

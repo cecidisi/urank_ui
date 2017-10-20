@@ -11,6 +11,7 @@ var TagCloud = require('../views/tagCloud');
 var UsertagBox = require('../views/usertagBox');
 var VisCanvas = require('../views/visCanvas');
 var NeighborsCloud = require('../views/neighborsCloud');
+var FeatureSearch = require('../views/featureSearch')
 
 
 
@@ -22,6 +23,16 @@ var Urank = (function() {
     //  METHODS PASSED TO VIEWS AND CALLED UPON EVENT OCCURRENCES
     ////////////////////////////////////////////////////////////////////////////////////////
     var EVTHANDLER = {
+        // SEARCH INPUT
+        onFeatureSearched: function(feature_type, text) {
+            if(text !== '') {
+                URANK.searchFeature(feature_type, text);
+                callbacks.onFeatureSearched.call(this, feature_type, text)    
+            }
+        },
+        onFeatureSelected: function(feature_type, index, name){
+            URANK.appendNewTag(feature_type, index, name);
+        },
         // TAGCLOUD
         onTagSelected: function(index, id, is_multiple) {
             var stem = _this.keywords[index].stem;
@@ -57,8 +68,10 @@ var Urank = (function() {
                 'weight': 1,
                 'is_new': true
             };
+            console.log(tag)
             views.tagBox.appendTag(tag);
-
+            _this.selectedFeatures.keywords.push(tag)
+            URANK.update(_this.selectedFeatures)
         },
 
         onKeywordEntered: function(keyword){
@@ -90,7 +103,7 @@ var Urank = (function() {
             // _this.selectedKeywords.splice(indexToDelete, 1);
             _this.selectedFeatures[featureType].splice(indexToDelete, 1);
             if(featureType === 'keywords') {
-                views.tagCloud.restoreTag(tag.index, tag.id);
+                views.tagCloud.restoreTag(tag, tag.index);
             } else if (featureType === 'neighbors') {
                 views.neighborsCloud.restoreTag(tag.index, tag.id)
             }
@@ -110,14 +123,14 @@ var Urank = (function() {
         },
 
         onTagInCloudMouseEnter: function(index, id) {
-            views.tagCloud.hoverTag(index, id);
+            views.tagCloud.hoverTag(_this.keywords[index], index);
             URANK.loadKeyphrases(index, id);
             // var tag = { index: index, id: id, term: _this.keywords[index].term }
             // callbacks.onTagInCloudMouseEnter.call(this, tag);
         },
 
         onTagInCloudMouseLeave: function(index, id) {
-            views.tagCloud.unhoverTag(index, id);
+            views.tagCloud.unhoverTag(_this.keywords[index], index);
             // var tag = { index: index, id: id, term: _this.keywords[index].term }
             // callbacks.onTagInCloudMouseLeave.call(this, tag);
         },
@@ -380,6 +393,15 @@ var Urank = (function() {
                         onNeighborTagMouseLeave: EVTHANDLER.onNeighborTagMouseLeave,
                         onNeighborTagSelected: EVTHANDLER.onNeighborTagSelected
                     }
+                },
+
+                featureSearch: {
+                    root: _config.elem.searchInputRoot,
+                    options: _config.searchInput,
+                    cb: {
+                        onFeatureSearched: EVTHANDLER.onFeatureSearched,
+                        onFeatureSelected: EVTHANDLER.onFeatureSelected
+                    }
                 }
             };
 
@@ -390,7 +412,8 @@ var Urank = (function() {
                 visCanvas   : new VisCanvas(viewsConf.visCanvas),
                 docViewer   : new DocViewer(viewsConf.docViewer),
                 usertagBox  : new UsertagBox(viewsConf.usertagBox),
-                neighborsCloud: new NeighborsCloud(viewsConf.neighborsCloud)
+                neighborsCloud: new NeighborsCloud(viewsConf.neighborsCloud),
+                featureSearch : new FeatureSearch(viewsConf.featureSearch)
             }
 
             //  Bind event handlers to resize window and undo effects on random clicks
@@ -415,6 +438,7 @@ var Urank = (function() {
             //Build views with data and/or keywords
             views.contentList.build(data, views.tagBox.getHeight());
             views.visCanvas.build(data, views.contentList.getListHeight());
+            views.featureSearch.build();
         },
 
         // Load keywords in tag cloud
@@ -578,6 +602,29 @@ var Urank = (function() {
             // _this.selectedKeywords = [];
             _this.selectedFeatures.keywords = [];
             callbacks.onReset.call(this);
+        },
+
+        searchFeature(feature_type, text) {
+            dataConn.searchFeature({ 'feature_type': feature_type, 'text': text }, 
+                function(feature_list) {
+                    _this.searchedFeatures = feature_list.slice();
+                    feature_list = feature_list.map(function(f, i){
+                        // return { 'id': f.id, 'text': f.term } 
+                        return { label: f.term, idx: i }
+                    });
+                    views.featureSearch.populateFeatureMenu(feature_type, feature_list);
+                }
+            )
+        },
+
+        appendNewTag: function(feature_type, index, name) {
+            var newTag = _this.searchedFeatures[index]
+            if(feature_type == 'keyword') {
+                _this.keywords.push(newTag)
+                // k, i, prepend = true, animate = true
+                views.tagCloud.addTag(newTag, _this.keywords.length-1, true, true)
+            }
+
         }
 
     }
@@ -630,6 +677,7 @@ var Urank = (function() {
         this.selectedUsertags = [];
         this.selectedNeighbors = [];
         this.selectedFeatures = {}; // keywords, neighbors, usertags, ...
+        this.searchedFeatures = [];
         selectedId = undefined;
 
         // Extend config.js with custom options
