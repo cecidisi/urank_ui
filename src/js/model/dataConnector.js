@@ -78,7 +78,7 @@ DataConnector = (function(){
 	};
 
 	var updateRanking = function(params, onDone) {
-		var url = this.urls.urank || this.urls.update_ranking;
+		var url = this.urls.update_ranking || this.urls.urank;
 		var data = $.extend(true, { 'operation': 'update' }, params);
 		postUrank(url, data, onDone);
 	};
