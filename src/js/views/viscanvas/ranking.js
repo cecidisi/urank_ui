@@ -455,7 +455,7 @@ var Ranking = (function(){
                 .attr("transform", "translate(" + (margin.left) + ", 0)");
 
             // update axes
-            svg.select('.'+xClass+'.'+axisClass).attr("transform", "translate(0," + (height) + ")").call(xAxis).orient('bottom');
+            svg.select('.'+xClass+'.'+axisClass).attr("transform", "translate(0," + (height) + ")").call(xAxis.orient('bottom'));
             return this;
         },
 

@@ -94,10 +94,6 @@ var Urank = (function() {
             callbacks.onTagInCloudClick.call(this, tag);
         },
 
-        onYearRangeSelected: function(from_year, to_year){
-            URANK.filterByYear(from_year, to_year)
-        },
-
         // TAG BOX
         onTagDeleted: function(tag) {
             
@@ -138,6 +134,11 @@ var Urank = (function() {
             views.tagCloud.unhoverTag(_this.keywords[index], index);
             // var tag = { index: index, id: id, term: _this.keywords[index].term }
             // callbacks.onTagInCloudMouseLeave.call(this, tag);
+        },
+
+        // FACET FILTERING
+        onRangeSelected: function(from, to){
+            URANK.filterByYear(from, to)
         },
 
         // USERTAGS

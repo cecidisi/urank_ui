@@ -1,8 +1,10 @@
 .urank-rangefilter-axis-x path,
 .urank-rangefilter-axis-x line {
     fill: none;
-    stroke: grey;
-    stroke-width: 0.2;
+    // stroke: grey;
+    // stroke-width: 0.2;
+    stroke: none;
+    stroke-width: 0;
 }
 
 .urank-rangefilter-axis-x text {
@@ -22,4 +24,12 @@
 .urank-rangefilter-axis-y .tick {
     stroke : none;
     stroke-width : 0;
+}
+
+.resize {
+  display: inline !important; /* show when empty */
+  fill: #7A7A7A;
+  fill-opacity: 1;
+  stroke: #7A7A7A;
+  stroke-width: 2px;
 }
