@@ -12,7 +12,7 @@ var UsertagBox = require('../views/usertagBox');
 var VisCanvas = require('../views/visCanvas');
 var NeighborsCloud = require('../views/neighborsCloud');
 var FeatureSearch = require('../views/featureSearch')
-var RangeFilter = require('../views/RangeFilter')
+var RangeFilter = require('../views/rangeFilter')
 
 
 
