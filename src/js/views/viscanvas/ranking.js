@@ -18,9 +18,9 @@ var Ranking = (function(){
         xAxisLabelClass = 'urank-ranking-label',
         yClass = 'urank-ranking-y',
         stackedbarClass = 'urank-ranking-stackedbar',
-        backgroundClass = 'urank-ranking-background',
-        lightBackgroundClass = 'urank-ranking-light-background',
-        darkBackgroundClass = 'urank-ranking-dark-background',
+        backgroundClass = 'urank-ranking-bar-background',
+        lightBackgroundClass = 'urank-ranking-bar-light-background',
+        darkBackgroundClass = 'urank-ranking-bar-dark-background',
         selectedClass = 'selected',
         dimmedClass = 'dimmed',
         barClass = 'urank-ranking-bar',
@@ -455,7 +455,7 @@ var Ranking = (function(){
                 .attr("transform", "translate(" + (margin.left) + ", 0)");
 
             // update axes
-            svg.select('.'+xClass+'.'+axisClass).attr("transform", "translate(0," + (height) + ")").call(xAxis.orient('bottom'));
+            svg.select('.'+xClass+'.'+axisClass).attr("transform", "translate(0," + (height) + ")").call(xAxis).orient('bottom');
             return this;
         },
 

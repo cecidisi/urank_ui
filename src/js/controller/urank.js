@@ -12,6 +12,7 @@ var UsertagBox = require('../views/usertagBox');
 var VisCanvas = require('../views/visCanvas');
 var NeighborsCloud = require('../views/neighborsCloud');
 var FeatureSearch = require('../views/featureSearch')
+var RangeFilter = require('../views/RangeFilter')
 
 
 
@@ -31,7 +32,7 @@ var Urank = (function() {
             }
         },
         onFeatureSelected: function(feature_type, index, name){
-            URANK.appendNewTag(feature_type, index, name);
+            URANK.addNewFeature(feature_type, index, name);
         },
         // TAGCLOUD
         onTagSelected: function(index, id, is_multiple) {
@@ -91,6 +92,10 @@ var Urank = (function() {
             views.visCanvas.highlightItems(idsArray).resize(views.contentList.getListHeight());
             var tag = { index: index, id: id, term: _this.keywords[index].term }
             callbacks.onTagInCloudClick.call(this, tag);
+        },
+
+        onYearRangeSelected: function(from_year, to_year){
+            URANK.filterByYear(from_year, to_year)
         },
 
         // TAG BOX
@@ -402,18 +407,26 @@ var Urank = (function() {
                         onFeatureSearched: EVTHANDLER.onFeatureSearched,
                         onFeatureSelected: EVTHANDLER.onFeatureSelected
                     }
+                },
+
+                rangeFilter: {
+                    root: _config.elem.rangeFilterRoot,
+                    cb: {
+                        onRangeSelected: EVTHANDLER.onRangeSelected
+                    }
                 }
             };
 
             views = {
-                contentList : new ContentList(viewsConf.contentList),
-                tagCloud    : new TagCloud(viewsConf.tagCloud),
-                tagBox      : new TagBox(viewsConf.tagBox),
-                visCanvas   : new VisCanvas(viewsConf.visCanvas),
-                docViewer   : new DocViewer(viewsConf.docViewer),
-                usertagBox  : new UsertagBox(viewsConf.usertagBox),
+                contentList   : new ContentList(viewsConf.contentList),
+                tagCloud      : new TagCloud(viewsConf.tagCloud),
+                tagBox        : new TagBox(viewsConf.tagBox),
+                visCanvas     : new VisCanvas(viewsConf.visCanvas),
+                docViewer     : new DocViewer(viewsConf.docViewer),
+                usertagBox    : new UsertagBox(viewsConf.usertagBox),
                 neighborsCloud: new NeighborsCloud(viewsConf.neighborsCloud),
-                featureSearch : new FeatureSearch(viewsConf.featureSearch)
+                featureSearch : new FeatureSearch(viewsConf.featureSearch),
+                rangeFilter   : new RangeFilter(viewsConf.rangeFilter)
             }
 
             //  Bind event handlers to resize window and undo effects on random clicks
@@ -492,20 +505,24 @@ var Urank = (function() {
         },
 
         loadKeyphrases: function(index, id) {
-            console.log('keyword id = ' + id + '; term = ' + _this.keywords[index].term);            
             // keyphrases already in memory
             if(_this.keywords[index].phrases) {
-                console.log('In memory')
+                console.log('Phrases in memory: keyword id = ' + id + '; term = ' + _this.keywords[index].term);            
                 views.tagCloud.showKeyphrases(index, id, _this.keywords[index].phrases);
             }
             // Fetch keyphrases for current keyword
             else {
-                console.log('Fetching form server')
+                console.log('Fetching phrases form server: keyword id = ' + id + '; term = ' + _this.keywords[index].term)
                 dataConn.getKeyphrases({ 'kw_id': id }, function(keyphrases){
                     views.tagCloud.showKeyphrases(index, id, keyphrases);
                     _this.keywords[index].phrases = keyphrases;
                 })
             }
+        },
+
+        // Generalize for generic facets
+        loadFacets: function(_facetData){
+            views.rangeFilter.build(_facetData)
         },
 
         // Update ranking
@@ -609,7 +626,6 @@ var Urank = (function() {
                 function(feature_list) {
                     _this.searchedFeatures = feature_list.slice();
                     feature_list = feature_list.map(function(f, i){
-                        // return { 'id': f.id, 'text': f.term } 
                         return { label: f.term, idx: i }
                     });
                     views.featureSearch.populateFeatureMenu(feature_type, feature_list);
@@ -617,13 +633,44 @@ var Urank = (function() {
             )
         },
 
-        appendNewTag: function(feature_type, index, name) {
-            var newTag = _this.searchedFeatures[index]
+        addNewFeature: function(feature_type, index, name) {
+            var newFeature = _this.searchedFeatures[index]
             if(feature_type == 'keyword') {
-                _this.keywords.push(newTag)
-                // k, i, prepend = true, animate = true
-                views.tagCloud.addTag(newTag, _this.keywords.length-1, true, true)
+                // Update keyphrases for newly added keyword
+                dataConn.getKeyphrases({ 'kw_id': newFeature.id }, function(keyphrases){
+                    newFeature.phrases = keyphrases;
+                    _this.keywords.push(newFeature);
+                    // k, i, prepend = true, animate = true
+                    views.tagCloud.addTag(newFeature, _this.keywords.length-1, true, true)
+                })                
             }
+
+        },
+
+        filterByYear: function(from_year, to_year) {
+            dataConn.filterByYear({ 
+                'from_year': from_year , 
+                'to_year': to_year}, function(_ranking){
+                    rankingData = _ranking;
+                    // status = _status;
+                    // Update views
+                    views.contentList.update({ 
+                        ranking: rankingData.slice(),
+                        status: status
+                    });
+                    views.visCanvas.update({
+                        status: status,
+                        ranking: rankingData,
+                        conf: rankingConf,
+                        // query: _this.selectedKeywords,
+                        features: _this.selectedFeatures,
+                        // query: _this.selectedFeatures.keywords,
+                        colorScale: colorScales.query,
+                        listHeight: views.contentList.getListHeight()
+                    });
+                    views.docViewer.clear();
+                    views.tagCloud.clearEffects();
+                })
 
         }
 
@@ -732,6 +779,10 @@ var Urank = (function() {
         // LOAD NEIGHBORS
         if(config.features.neighbors)
             dataConn.getNeighbors(URANK.loadNeighbors);
+        // LOAD FACETS (year)
+        config.facets.forEach(function(facet){
+            dataConn.getFacets({ 'facet_type': facet.type }, URANK.loadFacets)
+        })
         //  Custom callback
         callbacks.onLoad.call(this);
     };
@@ -783,8 +834,8 @@ var Urank = (function() {
         };
     };
 
-    var getSelectedKeywords = function(){ 
-        return _this.selectedKeywords 
+    var getSelectedFeatures = function(){ 
+        return _this.selectedFeatures
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -797,7 +848,7 @@ var Urank = (function() {
         bookmarkItem: bookmarkItem,
         unbookmarkItem: unbookmarkItem,
         getCurrentState: getCurrentState,
-        getSelectedKeywords: getSelectedKeywords
+        getSelectedFeatures: getSelectedFeatures
     };
 
     return Urank;

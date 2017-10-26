@@ -37,15 +37,15 @@
 
 
 .urank-ranking-stackedbar {
-    rect.urank-ranking-light-background {
+    rect.urank-ranking-bar-light-background {
         fill: #fff;
     }
 
-    rect.urank-ranking-dark-background {
+    rect.urank-ranking-bar-dark-background {
         fill: #fafafa;
     }
 
-    rect.urank-ranking-background {
+    rect.urank-ranking-bar-background {
         &.selected {
             fill: rgba(150,150,150,0.5) !important;
         }

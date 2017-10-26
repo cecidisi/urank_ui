@@ -111,11 +111,22 @@ DataConnector = (function(){
 		sendRequest({ 'url': url }, onDone)
 	};
 
+	var getFacets = function(params, onDone) {
+		var url = replaceParamsInUrl(this.urls.get_facets, params);
+		sendRequest({ 'url': url }, onDone);
+	};
+
 
 	var searchFeature = function(params, onDone) {
 		var url = replaceParamsInUrl(this.urls.search_features, params);
 		sendRequest({ 'url': url }, onDone)
 	};
+
+
+	var filterByYear = function(params, onDone){
+		var url = replaceParamsInUrl(this.urls.filter_articles_by_year, params);
+		sendRequest({ 'url': url }, onDone)
+	}
 
 
 	DataConnector.prototype = {
@@ -125,11 +136,13 @@ DataConnector = (function(){
 		getUsertags: getUsertags,
 		getNeighbors: getNeighbors,
 		getKeyphrases: getKeyphrases,
+		getFacets: getFacets,
 		updateRanking: updateRanking,
 		clearRanking, clearRanking,
 		showMoreRanking : showMoreRanking,
 		getDocumentDetails: getDocumentDetails,
-		searchFeature: searchFeature
+		searchFeature: searchFeature,
+		filterByYear: filterByYear
 	};
 
 	return DataConnector;

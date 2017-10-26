@@ -10,22 +10,27 @@ var Config = {
         docViewerRoot: '',
         usertagBox: '',
         neighborscloudRoot: '',
-        searchInputRoot: ''
+        searchInputRoot: '',
+        rangeFilter: ''
     },
     // FETCH DATA 
     dataConnector : {
         urls :{
-            get_data: null,             // GET
-            get_keywords: null,         // GET
-            get_tags: null,             // GET
-            get_usertags: null,         // GET
-            get_neighbors: null,        // GET
-            urank: null,                // POST if this one is used, the following 3 are ignored
-            update_ranking: null,       // POST
-            clear_ranking: null,        // POST
-            show_more_ranking: null,    // POST
-            get_document_details: null, // POST
-            search_features: null       // GET
+            get_data: null,               // GET
+            get_keywords: null,           // GET
+            get_tags: null,               // GET
+            get_usertags: null,           // GET
+            get_neighbors: null,          // GET
+            get_facets: null,             // GET
+            urank: null,                  // POST if this one is used, the following 3 are ignored
+            update_ranking: null,         // POST
+            clear_ranking: null,          // POST
+            show_more_ranking: null,      // POST
+            get_document_details: null,   // POST
+            get_keyphrases: null,         // GET
+            search_features: null,        // GET
+            filter_articles_by_year: null // GET
+
         },
         path_to_results: 'results'      // Path to results in ajax response object
     },

@@ -1,0 +1,25 @@
+.urank-rangefilter-axis-x path,
+.urank-rangefilter-axis-x line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 0.2;
+}
+
+.urank-rangefilter-axis-x text {
+	stroke: #888;
+	stroke-width: 0.5;
+}
+
+
+.urank-rangefilter-axis-y path,
+.urank-rangefilter-axis-y line {
+    fill: none;
+    stroke: none;
+    stroke-width: 0;
+}
+
+
+.urank-rangefilter-axis-y .tick {
+    stroke : none;
+    stroke-width : 0;
+}
