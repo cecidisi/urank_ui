@@ -10,6 +10,40 @@ var RangeFilter = (function(){
         xClass = 'urank-rangefilter-axis-x',
         yClass = 'urank-rangefilter-axis-y';
 
+	var dummyData = [
+		{ year: 1987, count: 10 },
+		{ year: 1988, count: 20 },
+		{ year: 1989, count: 30 },
+		{ year: 1990, count: 10 },
+		{ year: 1991, count: 50 },
+		{ year: 1992, count: 40 },
+		{ year: 1993, count: 70 },
+		{ year: 1994, count: 50 },
+		{ year: 1995, count: 60 },
+		{ year: 1996, count: 10 },
+		{ year: 1997, count: 20 },
+		{ year: 1998, count: 30 },
+		{ year: 1999, count: 10 },
+		{ year: 2000, count: 50 },
+		{ year: 2001, count: 40 },
+		{ year: 2002, count: 70 },
+		{ year: 2003, count: 50 },
+		{ year: 2004, count: 60 },
+		{ year: 2005, count: 80 },
+		{ year: 2006, count: 40 },
+		{ year: 2007, count: 10 },
+		{ year: 2008, count: 20 },
+		{ year: 2009, count: 30 },
+		{ year: 2010, count: 10 },
+		{ year: 2011, count: 50 },
+		{ year: 2012, count: 40 },
+		{ year: 2013, count: 70 },
+		{ year: 2014, count: 50 },
+		{ year: 2015, count: 60 },
+		{ year: 2016, count: 80 },
+		{ year: 2017, count: 40 }
+	];
+
 
 	function RangeFilter(params){
 		_this = this;
@@ -25,23 +59,9 @@ var RangeFilter = (function(){
 
 
 	var _build = function(facetData){
-		
-		// facetData = [
-		// 	{ year: 2007, count: 10 },
-		// 	{ year: 2008, count: 20 },
-		// 	{ year: 2009, count: 30 },
-		// 	{ year: 2010, count: 10 },
-		// 	{ year: 2011, count: 50 },
-		// 	{ year: 2012, count: 40 },
-		// 	{ year: 2013, count: 70 },
-		// 	{ year: 2014, count: 50 },
-		// 	{ year: 2015, count: 60 },
-		// 	{ year: 2016, count: 80 },
-		// 	{ year: 2017, count: 40 }
-		// ]
-
+		// facetData = dummyData
 		var svg, gChart, gBrush;
-		var margin = { 'top': 10, 'right': 5, 'bottom': 40, 'left': 5 }
+		var margin = { 'top': 12, 'right': 10, 'bottom': 30, 'left': 10 }
 		var outerWidth = $root.width();
 		var outerHeight = $root.height();
 		var width = outerWidth - margin.left - margin.right;
@@ -56,7 +76,20 @@ var RangeFilter = (function(){
 		}
 
 		var ext_val = d3.extent(facetData, function(d){ return d.year } );
+		var from_val = ext_val[0]
+		var to_val = ext_val[1]
 		var valRange = _.range(ext_val[0], ext_val[1]+1)
+
+		var customizeTickValues = function(){
+			if(facetData.length >= 50)
+				return valRange.filter(function(v){ return v % 10 == 0 })
+			if(facetData.length >= 30)
+				return valRange.filter(function(v){ return v % 5 == 0 })
+			if(facetData.length >= 10)
+				return valRange.filter(function(v){ return v % 2 == 0 })
+			return valRange
+		}
+
 
 		var x = d3.scale.ordinal()
 			.domain(valRange)
@@ -71,6 +104,7 @@ var RangeFilter = (function(){
 		var xAxis = d3.svg.axis()
 			.scale(x)
 			.orient('bottom')
+			.tickValues(customizeTickValues())
 			// customize ticks
 
 		var yAxis = d3.svg.axis()
