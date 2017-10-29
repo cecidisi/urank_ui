@@ -126,8 +126,8 @@ var DocViewer = (function(){
     var _showDocument = function(doc, keywords, colorScale){
         console.log(doc)
         $root.show();
-        // var title = doc[s.attr.pretty_title] || doc[s.attr.title];
-        $(detailItemIdPrefix + 'title').html(doc[s.attr.title]);
+        var title = utils.getDeepVal(doc, s.attr.title);
+        $(detailItemIdPrefix + 'title').html(title);
         // $(detailItemIdPrefix + 'title').html(getStyledText(doc[s.attr.title], keywords, colorScale));
         // $(detailItemIdPrefix + 'author').html(doc.creator);
         var fields = (s.options && s.options.attrToShow) ? s.options.attrToShow : [];
@@ -135,10 +135,9 @@ var DocViewer = (function(){
             addField(field, doc)
         });
 
-        $contentSection.empty();
-        // var $p = $('<p></p>').appendTo($contentSection).html(getStyledText(doc[s.attr.description], keywords, colorScale));
-        // var description = doc[s.attr.pretty_description] || doc[s.attr.description];
-        var $p = $('<p></p>').appendTo($contentSection).html(doc[s.attr.description]);
+        $contentSection.empty();        
+        var description = utils.getDeepVal(doc, s.attr.description);
+        var $p = $('<p></p>').appendTo($contentSection).html(description);
         $p.hide().fadeIn('slow').scrollTo('top');
         $contentSectionOuter.mCustomScrollbar('update');
     };

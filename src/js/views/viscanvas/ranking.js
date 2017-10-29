@@ -10,6 +10,7 @@ var Ranking = (function(){
     var svg;
     var data;
     var $root = $('');
+    var ranking, features, conf, rankBy;
 
     //  Classes
     var svgClass = 'urank-ranking-svg',
@@ -43,7 +44,8 @@ var Ranking = (function(){
             cb : {
                 onItemClicked: function(doc, i){},
                 onItemMouseEnter: function(doc, i){},
-                onItemMouseLeave: function(doc, i){}
+                onItemMouseLeave: function(doc, i){},
+                onShowMoreClicked: function(){}
             }
         }, params);
         this.isRankingDrawn = false;
@@ -204,13 +206,51 @@ var Ranking = (function(){
             return this;
         },
 
+        addMoreEntries: function(moreData, ranking, features, conf, rankBy, listHeight) {
+            moreData = RANKING.Settings.getExtendedData({
+                ranking: moreData,
+                features: features,
+                conf: conf,
+                rankBy: rankBy
+            });
+            // console.log(moreData[0]);
+            var animate_from = data.length;
+            var animate_to = data.length + moreData.length - 1;
+            data = data.concat(moreData);
+            // data = RANKING.Settings.getExtendedData(params);
+
+            RANKING.Render.updateCanvasDimensions(listHeight);
+
+            // Redefine x & y scales' domain
+            d3.select(s.root).select('.'+svgClass).attr("width", width)
+            svg.attr("width", width);
+
+            // xUpperLimit =  RANKING.Settings.getXUpperLimit(params.conf);
+            x.rangeRound( [0, width] ).domain([0, xUpperLimit]).copy();
+
+            y.rangeBands( [0, height]);
+            y.domain(data.map(function(d){ return d[s.attr.id] })).copy();
+
+            var transition = svg.transition().duration(750);
+            var delay = function(d, i) { return i * 50; };
+
+            transition.select('.'+xClass+'.'+axisClass).call(xAxis)
+                .selectAll("g").delay(delay);
+
+            transition.select('.'+yClass+'.'+axisClass).call(yAxis)
+                .selectAll("g").delay(delay);
+
+            RANKING.Render.drawStackedBars(animate_from, animate_to);
+
+        },
+
         /******************************************************************************************************************
         *
         *	Redraw updated ranking and animate with transitions to depict changes
         *
         * ***************************************************************************************************************/
         redrawUpdated: function(params){
-            data = RANKING.Settings.getExtendedData(params);   //(params.ranking, ranking_conf, params.colorScale);
+            data = RANKING.Settings.getExtendedData(params);   //(params.ranking, ranking_conf);
 //            width = $root.width();
             RANKING.Render.updateCanvasDimensions(params.listHeight);
 
@@ -247,13 +287,15 @@ var Ranking = (function(){
         },
 
 
-
         /******************************************************************************************************************
         *
         *	Draw stacked bars either on draw or update methods. Animate with width transition
         *
         * ***************************************************************************************************************/
-        drawStackedBars: function(){
+        drawStackedBars: function(animate_from, animate_to){
+            animate_from = animate_from || 0;
+            animate_to = animate_to || data.length-1;
+
             svg.selectAll('.'+stackedbarClass).data([]).exit();
             svg.selectAll('.'+stackedbarClass).remove();
             //svg.selectAll('.'+stackedbarClass).data(data).enter();
@@ -302,10 +344,13 @@ var Ranking = (function(){
                 }
                 
                 var t0 = bars.transition()
-                    .duration(800)
+                    // .duration(800)
+                    .duration(function(d, i){
+                        return (i >= animate_from && i <= animate_to) ? 1000 : 0;
+                    })
                     .attr({ 'width': function(d) { return getBarWidth(d) } });
 
-            }, 800);
+            }, /*500*/ 0);
             return this;
         },
 
@@ -498,6 +543,14 @@ var Ranking = (function(){
         }
     };
 
+    var addShowMoreButton = function() {
+        $('.btn-show-more').remove();
+        $('<div/>', { class: 'btn-show-more' }).appendTo($root).click(function(evt){
+            evt.stopPropagation();
+            s.cb.onShowMoreClicked();
+        })
+    };
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //  Prototype methods
 
@@ -506,19 +559,37 @@ var Ranking = (function(){
         _this.originalData = data;
         _this.originalHeight = containerHeight;
         RANKING.Render.drawNew(data, containerHeight).createBarHoverGradient();
+        addShowMoreButton();
         return this;
     }
 
 
     var _update = function(params){
+        ranking = params.ranking;
+        features = params.features; 
+        conf = params.conf;
+        rankBy = params.conf.rankBy;
+           //(params.ranking, ranking_conf, params.colorScale);
         var updateFunc = {};
         updateFunc[Globals.RANKING_STATUS.new] = RANKING.Render.redrawUpdated;
         updateFunc[Globals.RANKING_STATUS.update] = RANKING.Render.redrawUpdated;
         updateFunc[Globals.RANKING_STATUS.unchanged] = RANKING.Render.redrawUpdated;
         updateFunc[Globals.RANKING_STATUS.no_ranking] = _this.reset;
         updateFunc[params.status].call(this, params);
+
+        // Show or hide "Show More" button depending on number of results
+        var showMoreDisplay = params.ranking.length < params.totalCount ? 'block' : 'none';
+        $('.btn-show-more').css('display', showMoreDisplay);
         return this;
     };
+
+    var _showMoreData = function(params){
+        var moreData = params.data;
+        var listHeight = params.listHeight;
+
+        RANKING.Render.addMoreEntries(moreData, ranking, features, conf, rankBy, listHeight);
+    };
+
 
     var _clear = function(){
         this.isRankingDrawn = false;
@@ -600,6 +671,7 @@ var Ranking = (function(){
         update: _update,
         clear: _clear,
         reset: _reset,
+        showMoreData: _showMoreData,
         selectItem: _selectItem,
         deselectAllItems : _deSelectAllItems,
         hoverItem: _hoverItem,

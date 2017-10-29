@@ -18,21 +18,22 @@ var RangeFilter = require('../views/rangeFilter')
 
 var Urank = (function() {
     var _this, config, views, colorScales, callbacks, rankingConf, attr;
-    var dataConn, rankingModel, selectedId, data, rankingData, keywordExtractor, tags;
+    var dataConn, rankingModel, selectedId, data, keywordExtractor, tags;
     
     ////////////////////////////////////////////////////////////////////////////////////////
     //  METHODS PASSED TO VIEWS AND CALLED UPON EVENT OCCURRENCES
     ////////////////////////////////////////////////////////////////////////////////////////
     var EVTHANDLER = {
         // SEARCH INPUT
-        onFeatureSearched: function(feature_type, text) {
+        onFeatureTyping: function(feature_type, text) {
             if(text !== '') {
                 URANK.searchFeature(feature_type, text);
-                callbacks.onFeatureSearched.call(this, feature_type, text)    
+                callbacks.onFeatureTyping.call(this, feature_type, text)    
             }
         },
-        onFeatureSelected: function(feature_type, index, name){
+        onFeatureSearched: function(feature_type, index, name){
             URANK.addNewFeature(feature_type, index, name);
+
         },
         // TAGCLOUD
         onTagSelected: function(index, id, is_multiple) {
@@ -85,6 +86,10 @@ var Urank = (function() {
             callbacks.onTagFrequencyChanged.call(this, min, max);
         },
 
+        onShowMoreClicked: function(){
+            URANK.showMore();
+        },
+
         onTagInCloudClick: function(index, id) {
             // FIX HERE --> request bearing documents to server
             var idsArray = _this.keywords[index].inDocument;
@@ -99,7 +104,8 @@ var Urank = (function() {
             
             var featureType = tag.type + 's'
             var indexToDelete = _.findIndex(_this.selectedFeatures[featureType], function(t){
-                return t.id.toString() === tag.id.toString();
+                // return t.id.toString() === tag.id.toString();
+                return t.name === tag.name;
             });
             // _this.selectedKeywords.splice(indexToDelete, 1);
             _this.selectedFeatures[featureType].splice(indexToDelete, 1);
@@ -116,7 +122,8 @@ var Urank = (function() {
         onTagWeightChanged: function(tag /*index, id, weight*/){
             var featureType = tag.type + 's'
             var indexToUpdate = _.findIndex(_this.selectedFeatures[featureType], function(t){
-                return t.id.toString() === tag.id.toString();
+                // return t.id.toString() === tag.id.toString();
+                return t.name === tag.name;
             });
             _this.selectedFeatures[featureType][indexToUpdate].weight = tag.weight;            
             URANK.update(_this.selectedFeatures);            
@@ -220,6 +227,11 @@ var Urank = (function() {
         },
 
         onDocViewerHidden: function() {
+            if(selectedId) {
+                selectedId = undefined;
+                callbacks.onDocViewerHidden();
+            }
+            
             views.docViewer.clear();
             views.contentList.deselectAllListItems();
             views.visCanvas.deselectAllItems();
@@ -366,6 +378,7 @@ var Urank = (function() {
                         onItemClicked: EVTHANDLER.onItemClicked,
                         onItemMouseEnter: EVTHANDLER.onItemMouseEnter,
                         onItemMouseLeave: EVTHANDLER.onItemMouseLeave,
+                        onShowMoreClicked: EVTHANDLER.onShowMoreClicked,
                         onScroll: EVTHANDLER.onParallelBlockScrolled
                     }
                 },
@@ -405,8 +418,8 @@ var Urank = (function() {
                     root: _config.elem.searchInputRoot,
                     options: _config.searchInput,
                     cb: {
-                        onFeatureSearched: EVTHANDLER.onFeatureSearched,
-                        onFeatureSelected: EVTHANDLER.onFeatureSelected
+                        onFeatureTyping: EVTHANDLER.onFeatureTyping,
+                        onFeatureSearched: EVTHANDLER.onFeatureSearched
                     }
                 },
 
@@ -530,7 +543,6 @@ var Urank = (function() {
         update: function(_selectedFeatures) {
             // _this.selectedKeywords = _selectedKeywords || _this.selectedKeywords;
             _this.selectedFeatures = _selectedFeatures
-            selectedId = undefined;
             console.log(rankingConf);
 
             var emptyFeat = true;
@@ -544,23 +556,27 @@ var Urank = (function() {
             }
             // Update ranking config
             var params = {
+                user: _this.user,
                 rs_conf: rankingConf,
                 features: _this.selectedFeatures,
                 decoration: config.contentList.aes.textDecoration
             };
 
-            rankingModel.update(params, function(_ranking, _status){
-                rankingData = _ranking;
+            rankingModel.update(params, function(_ranking, _status, _totalCount){
+                data = _ranking;
                 status = _status;
+                totalCount = _totalCount;
                 // Update views
                 views.contentList.update({ 
-                    ranking: rankingData.slice(),
-                    status: status
+                    ranking: data.slice(),
+                    status: status,
+                    totalCount: totalCount
                 });
                 views.visCanvas.update({
                     status: status,
-                    ranking: rankingData,
+                    ranking: data,
                     conf: rankingConf,
+                    totalCount: totalCount,
                     // query: _this.selectedKeywords,
                     features: _this.selectedFeatures,
                     // query: _this.selectedFeatures.keywords,
@@ -570,8 +586,27 @@ var Urank = (function() {
                 views.docViewer.clear();
                 views.tagCloud.clearEffects();
                 // Callback specified by main.js
-                // callbacks.onUpdate.call(this, rankingData, _this.selectedKeywords, status);
+                // callbacks.onUpdate.call(this, data, _this.selectedKeywords, status);
             });
+        },
+
+        // Show more data ata the bottom
+        showMore: function(){
+            console.log('Current count = ' + data.length)
+            dataConn.showMoreData({ 
+                'user_id': _this.user,
+                'current_count': data.length
+            }, function(moreData){
+                console.log('Received ' + moreData.length + ' more results')
+                views.contentList.showMoreData(moreData);
+                views.visCanvas.showMoreData({
+                    'data': moreData,
+                    'listHeight': views.contentList.getListHeight()
+                });
+
+                data = data.concat(moreData);
+            })
+
         },
 
         // Show clicked document
@@ -619,6 +654,7 @@ var Urank = (function() {
             
             // _this.selectedKeywords = [];
             _this.selectedFeatures.keywords = [];
+            dataConn.getData(URANK.loadData)
             callbacks.onReset.call(this);
         },
 
@@ -635,33 +671,36 @@ var Urank = (function() {
         },
 
         addNewFeature: function(feature_type, index, name) {
-            var newFeature = _this.searchedFeatures[index]
             if(feature_type == 'keyword') {
                 // Update keyphrases for newly added keyword
-                dataConn.getKeyphrases({ 'kw_id': newFeature.id }, function(keyphrases){
-                    newFeature.phrases = keyphrases;
-                    _this.keywords.push(newFeature);
+                var keyword = _this.searchedFeatures[index]
+                dataConn.getKeyphrases({ 'kw_id': keyword.id }, function(keyphrases){
+                    keyword.phrases = keyphrases;
+                    _this.keywords.push(keyword);
                     // k, i, prepend = true, animate = true
-                    views.tagCloud.addTag(newFeature, _this.keywords.length-1, true, true)
+                    views.tagCloud.addTag(keyword, _this.keywords.length-1, true, true)
+
+                    var obj = { 'id': keyword.id, 'index': _this.keywords.length-1, 'name': name }
+                    callbacks.onFeatureSearched(obj)
                 })                
             }
 
         },
 
         filterByYear: function(from_year, to_year) {
-            dataConn.filterByYear({ 
+            dataConn.filterByYear({
                 'from_year': from_year , 
                 'to_year': to_year}, function(_ranking){
-                    rankingData = _ranking;
+                    data = _ranking;
                     // status = _status;
                     // Update views
                     views.contentList.update({ 
-                        ranking: rankingData.slice(),
+                        ranking: data.slice(),
                         status: status
                     });
                     views.visCanvas.update({
                         status: status,
-                        ranking: rankingData,
+                        ranking: data.slice(),
                         conf: rankingConf,
                         // query: _this.selectedKeywords,
                         features: _this.selectedFeatures,
@@ -671,6 +710,8 @@ var Urank = (function() {
                     });
                     views.docViewer.clear();
                     views.tagCloud.clearEffects();
+
+                    callbacks.onFacetFiltered.call(this, { 'type': 'year', 'value': from_year+'-'+to_year })
                 })
 
         }
@@ -718,6 +759,7 @@ var Urank = (function() {
     function Urank(options) {
         _this = this;
         data = [];
+        this.user = '';
         this.keywords = [];
         this.usertags = [];
         this.neighbors = [];
@@ -753,6 +795,9 @@ var Urank = (function() {
     ////////////////////////////////////////////////////////////////////////////////////////
     // PROTOTYPE METHODS
     ////////////////////////////////////////////////////////////////////////////////////////
+    var setUser = function(user){
+        this.user = user;
+    }
 
     var load = function(_data) {
         views.tagBox.build(rankingConf);
@@ -843,6 +888,7 @@ var Urank = (function() {
     //  Prototype
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     Urank.prototype = {
+        setUser: setUser,
         load: load,
         clear: clear,
         destroy: destroy,

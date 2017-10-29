@@ -1,4 +1,5 @@
 var Globals = require('../config/globals');
+var utils = require('../helper/utils')
 
 var ContentList = (function() {
 
@@ -265,7 +266,7 @@ var ContentList = (function() {
 
 
 
-    var animateResortEffect = function() {
+    var animateResortEffect = function(data) {
         var duration = 1000;
         var easing = 'swing';
         var acumHeight = 0;
@@ -274,13 +275,8 @@ var ContentList = (function() {
         var options = [];
 
         // Compute shifts
-        _this.data.forEach(function(d, i) { 
+        data.forEach(function(d, i) { 
             var shift = 0;
-            // if((_this.status === Globals.RANKING_STATUS.new && d.ranking.pos > 0 && d.ranking.pos < 40) ||
-            //    (d.ranking.pos > 0 && d.ranking.pos < 30) ||
-            //    (d.ranking.prev_pos > 0 && d.ranking.prev_pos < 30)) {
-            //     shift = listTop + (d.ranking.prev_pos - d.ranking.pos) * itemHeight - curTop;
-            // }
             if(d.ranking.pos > 0 && d.ranking.pos < 30) {
                 var curTop = $('.'+liClass+'['+urankIdAttr+'="'+d[s.attr.id]+'"]').position().top;
                 var prevTop = listTop + (d.ranking.prev_pos - 1) * itemHeight;                
@@ -307,11 +303,11 @@ var ContentList = (function() {
     };
 
 
-    var animateUnchangedEffect = function () {
+    var animateUnchangedEffect = function (data) {
         var duration = 1000;
         var easing = 'linear';
 
-        _this.data.forEach(function(d, i) {
+        data.forEach(function(d, i) {
             //var $item = $(liItem +''+ d[s.attr.id]);
             var $item = $('.'+liClass+'['+urankIdAttr+'="'+d[s.attr.id]+'"]');
             var startDelay = (i+1) * 30;
@@ -392,37 +388,12 @@ var ContentList = (function() {
 
         $ul = $('<ul></ul>').appendTo($scrollable).addClass(ulClass +' '+ ulClassDefault);
 
-        _this.data.forEach(function(d, i) {
-            // li element
-            var $li = $('<li></li>', { 'urank-id': d[s.attr.id], 'original-index': d.idx || i }).appendTo($ul).addClass(liClass +' '+ liClassDefault);
-            // ranking section
-            var $rankingDiv = $("<div></div>").appendTo($li).addClass(liRankingContainerClass).css('visibility', 'hidden');
-            $("<div></div>").appendTo($rankingDiv).addClass(rankingPosClass);
-            $("<div></div>").appendTo($rankingDiv).addClass(rankingPosMovedClass);
-            // title section
-            var $titleDiv = $("<div></div>").appendTo($li).addClass(liTitleContainerClass);
-            $('<h3></h3>', { id: 'urank-list-li-title-' + i, class: liTitleClass, html: d[s.attr.title]/*, title: d[s.attr.title] + '\n' + d.description*/ }).appendTo($titleDiv);
-            // buttons section
-            var $buttonsDiv = $("<div></div>").appendTo($li).addClass(liButtonsContainerClass);
-            $("<span>").appendTo($buttonsDiv).addClass(watchiconClass+' '+watchiconDefaultClass+' '+offClass);
-            var favIconStateClass = d.bookmarked ? onClass : offClass;
-            $("<span>").appendTo($buttonsDiv).addClass(faviconClass+' '+faviconDefaultClass+' '+favIconStateClass);
-            // Subtle animation
-//            $li.animate({ opacity: 0 }, 0)
-//                .queue(function(){
-//                $(this).animate({ opacity: 1 }, (i+1)*100, 'swing')
-//            }).queue(function(){
-//                $(this).css('opacity', '');
-//                bindEventHandlers($li, d[s.attr.id], i);
-//            }).dequeue();
-            $li.hide().fadeIn((i+1)*100);
-            bindEventHandlers($li, d[s.attr.id], i);
-        });
+        _this.data.forEach(function(d, i){ d.index = i });
+        buildEntries(_this.data);
     };
 
 
     var buildHeader = function(height){
-
         $('.'+headerClass).remove();
         $header = $('<div/>').appendTo($root).addClass(headerClass).css('height', height);
         var $headerPos = $('<div/>').appendTo($header).addClass(headerPosAndshiftClass + ' ' + headerStyleClass);
@@ -436,25 +407,32 @@ var ContentList = (function() {
     };
 
 
-    var buildEntries = function(data){
-        $ul.empty();
+    var buildEntries = function(data, fadeIn, appendToBottom){
+        if(!appendToBottom) {
+            $ul.empty();    
+        }
         data.forEach(function(d, i) {
+            var id = utils.getDeepVal(d, s.attr.id);
+            var title = utils.getDeepVal(d, s.attr.title);
+            var bookmarked = utils.getDeepVal(d, s.attr.bookmarked)
             // li element
-            var $li = $('<li></li>', { 'urank-id': d[s.attr.id], 'original-index': i }).appendTo($ul).addClass(liClass +' '+ liClassDefault);
+            var $li = $('<li></li>', { 'urank-id': id, 'original-index': d.index }).appendTo($ul).addClass(liClass +' '+ liClassDefault);
             // ranking section
             var $rankingDiv = $("<div></div>").appendTo($li).addClass(liRankingContainerClass).css('visibility', 'hidden');
             $("<div></div>").appendTo($rankingDiv).addClass(rankingPosClass);
             $("<div></div>").appendTo($rankingDiv).addClass(rankingPosMovedClass);
             // title section
             var $titleDiv = $("<div></div>").appendTo($li).addClass(liTitleContainerClass);
-            $('<h3></h3>', { id: 'urank-list-li-title-' + i, class: liTitleClass, html: d[s.attr.title]/*, title: d[s.attr.title] + '\n' + d.description*/ }).appendTo($titleDiv);
+            $('<h3></h3>', { id: 'urank-list-li-title-' + i, class: liTitleClass, html: title/*, title: d[s.attr.title] + '\n' + d.description*/ }).appendTo($titleDiv);
             // buttons section
             var $buttonsDiv = $("<div></div>").appendTo($li).addClass(liButtonsContainerClass);
             $("<span>").appendTo($buttonsDiv).addClass(watchiconClass+' '+watchiconDefaultClass+' '+offClass);
-            var favIconStateClass = d.bookmarked ? onClass : offClass;
+            var favIconStateClass = bookmarked ? onClass : offClass;
             $("<span>").appendTo($buttonsDiv).addClass(faviconClass+' '+faviconDefaultClass+' '+favIconStateClass);
-            // $li.hide().fadeIn((i+1)*100);
-            bindEventHandlers($li, d[s.attr.id], i);
+            if(fadeIn) {
+                $li.hide().fadeIn((i+1)*100);    
+            }
+            bindEventHandlers($li, id, i);
         });
     };
 
@@ -482,6 +460,14 @@ var ContentList = (function() {
     };
 
 
+    var _showMoreData = function(moreData) {
+        var index_offset = this.data.length;
+        moreData.forEach(function(d, i){ d.index = index_offset + i })
+        buildEntries(moreData, true, true);
+        this.data = this.data.concat(moreData)
+        updateLiBackground();
+        showRankingPositions();
+    };
 
     /**
     * @private     * Description
@@ -498,25 +484,18 @@ var ContentList = (function() {
             .removeClass(liMovingUpClass).removeClass(liMovingDownClass).removeClass(liNotMovingClass)  //stop animation
             .removeClass(selectedClass).removeClass(dimmedClass);                                        // deselect all classes
 
-        //        console.log('Stop Animation');
-        //        stopAnimation();
-        //        console.log('Deselect items');
-        //        this.deselectAllListItems();
-        //        formatTitles(options.colorScale);
-
-        //        console.log('Hide unranked');
-        //        hideUnrankedListItems();
         var updateFunc = {};
         updateFunc[Globals.RANKING_STATUS.new] = animateAccordionEffect; //animateResortEffect;
         updateFunc[Globals.RANKING_STATUS.update] = animateResortEffect;
         updateFunc[Globals.RANKING_STATUS.unchanged] = animateUnchangedEffect;
         updateFunc[Globals.RANKING_STATUS.no_ranking] = _this.reset;
 
+        this.data.forEach(function(d, i){ d.index = i })
         buildEntries(this.data);
         updateLiBackground();
         // sortList();
         console.log(this.status)
-        updateFunc[this.status]();
+        updateFunc[this.status](this.data);
         console.log('In update data.length = ' + this.data.length);
         showRankingPositions();
         setTimeout(removeMovingStyle, 3000);
@@ -596,48 +575,48 @@ var ContentList = (function() {
         var classToRemove = state === 'on' ? offClass : onClass;
         $favIcon.switchClass(classToRemove, classToAdd);
 
-        if(state === 'on') {
-            // background
-            $bgCover = $('<div/>', { class: 'bg-cover' }).appendTo($('body'));
-            var top = $favIcon.offset().top;
-            var left = $favIcon.offset().left;
-            console.log(top + ' - ' + left);
-            var $rating = $('<div/>', { class: 'tooltip-rating'}).appendTo($('body'));
-            $rating.css({
-                top: (parseInt(top) - 76) + 'px', 
-                left: parseInt(left) + 15 + 'px'
-            });
-            // .appendTo($favIcon.parent());
-            $('<div/>', { class: 'rating-message', html: Globals.LEGENDS.rating }).appendTo($rating);
-            var $starContainer = $('<div/>', { class: 'star-container' }).appendTo($rating);
-            // append stars
-            for(i = 1; i <= 5; i++) {
-                var $star = $('<div/>', { class: 'star', id: 'star-'+i, pos: i }).appendTo($starContainer);
-                $star.on({
-                    mouseover: function(evt) {
-                        evt.stopPropagation();
-                        var pos = parseInt($(this).attr('pos'));
-                        for(j=1; j<=pos; j++) {
-                            $('#star-'+j).addClass('hovered');
-                        }
-                    },
-                    mouseleave: function(evt) {
-                        evt.stopPropagation();
-                        $('.star').removeClass('hovered');
-                    },
-                    click : function(evt) {
-                        evt.stopPropagation();
-                        var rating = parseInt($(this).attr('pos'));
-                        s.cb.onRatingClicked(id, index, rating)
+        // if(state === 'on') {
+        //     // background
+        //     $bgCover = $('<div/>', { class: 'bg-cover' }).appendTo($('body'));
+        //     var top = $favIcon.offset().top;
+        //     var left = $favIcon.offset().left;
+        //     console.log(top + ' - ' + left);
+        //     var $rating = $('<div/>', { class: 'tooltip-rating'}).appendTo($('body'));
+        //     $rating.css({
+        //         top: (parseInt(top) - 76) + 'px', 
+        //         left: parseInt(left) + 15 + 'px'
+        //     });
 
-                        setTimeout(function(){
-                            $bgCover.remove();
-                            $rating.remove();
-                        }, 800);
-                    }
-                })
-            }
-        }
+        //     $('<div/>', { class: 'rating-message', html: Globals.LEGENDS.rating }).appendTo($rating);
+        //     var $starContainer = $('<div/>', { class: 'star-container' }).appendTo($rating);
+        //     // append stars
+        //     for(i = 1; i <= 5; i++) {
+        //         var $star = $('<div/>', { class: 'star', id: 'star-'+i, pos: i }).appendTo($starContainer);
+        //         $star.on({
+        //             mouseover: function(evt) {
+        //                 evt.stopPropagation();
+        //                 var pos = parseInt($(this).attr('pos'));
+        //                 for(j=1; j<=pos; j++) {
+        //                     $('#star-'+j).addClass('hovered');
+        //                 }
+        //             },
+        //             mouseleave: function(evt) {
+        //                 evt.stopPropagation();
+        //                 $('.star').removeClass('hovered');
+        //             },
+        //             click : function(evt) {
+        //                 evt.stopPropagation();
+        //                 var rating = parseInt($(this).attr('pos'));
+        //                 s.cb.onRatingClicked(id, index, rating)
+
+        //                 setTimeout(function(){
+        //                     $bgCover.remove();
+        //                     $rating.remove();
+        //                 }, 800);
+        //             }
+        //         })
+        //     }
+        // }
     };
 
 
@@ -704,6 +683,7 @@ var ContentList = (function() {
         update: _update,
         hover: _hover,
         unhover: _unhover,
+        showMoreData: _showMoreData,
         selectListItem: _selectListItem,
         deselectAllListItems: _deselectAllListItems,
         highlightListItems: _highlightListItems,

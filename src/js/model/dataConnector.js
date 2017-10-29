@@ -5,7 +5,8 @@ DataConnector = (function(){
 
 	function DataConnector(options){
 		this.urls = options.urls;
-		this.path_to_results = options.path_to_results;
+		this.path_to_results = options.path_to.results;
+		this.path_to_count = options.path_to.count;
 		_this = this;
 	}
 
@@ -28,7 +29,9 @@ DataConnector = (function(){
 	    }).done(function(resp) {
 	        timelapse = $.now() - timelapse
 	        console.log('DataConnector: successful request ' + request_options.type + ' ' + request_options.url + ' (' + timelapse + ' ms)');
-	        onDone(utils.getDeepVal(resp, _this.path_to_results));
+	        var results = utils.getDeepVal(resp, _this.path_to_results);
+	        var count = utils.getDeepVal(resp, _this.path_to_count)
+	        onDone(results, count);
 	    });
 
 	};
@@ -89,10 +92,13 @@ DataConnector = (function(){
 		postUrank(url, data, onDone);
 	};
 
-	var showMoreRanking = function(onDone){
-		var url = this.urls.urank || this.urls.show_more_ranking;
-		var data = { 'operation': 'show_more' };
-		postUrank(url, done, onDone);
+	var showMoreData = function(params, onDone){
+		var url = this.urls.show_more_data || this.urls.urank;
+		url = replaceParamsInUrl(url, params);
+		sendRequest({ 'url': url }, onDone);
+		
+		// var data = { 'operation': 'show_more' };
+		// postUrank(url, done, onDone);
 	};
 
 	var getDocumentDetails = function(params, onDone){
@@ -139,7 +145,7 @@ DataConnector = (function(){
 		getFacets: getFacets,
 		updateRanking: updateRanking,
 		clearRanking, clearRanking,
-		showMoreRanking : showMoreRanking,
+		showMoreData : showMoreData,
 		getDocumentDetails: getDocumentDetails,
 		searchFeature: searchFeature,
 		filterByYear: filterByYear

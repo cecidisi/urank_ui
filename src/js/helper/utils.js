@@ -110,7 +110,7 @@ module.exports = {
 
     getDeepVal: function(obj, path) {
         if (!path || path === '')
-            return obj;
+            return null;
 
         var attrs = path.split('.')
         var value = obj

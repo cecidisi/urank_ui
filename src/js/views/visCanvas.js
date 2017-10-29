@@ -64,31 +64,6 @@ var VisCanvas = (function(){
     };
 
     var _build = function(data, height) {
-        // this.height = height;
-        // $root = $(s.root).empty().addClass(viscanvasClass);
-
-        // //  Set scrolling
-        // if(opt.misc.hideScrollbar) {
-        //     $root.addClass(hiddenScrollbarClass);
-        //     $scrollable = $('<div/>').appendTo($root).addClass(hiddenScrollbarInnerClass);
-        //     $scrollable = $root.mCustomScrollbar(customScrollOptions);
-        // }
-        // else {
-        //     $scrollable = $root;
-        // }
-        // $scrollable.on('scroll', onScroll);
-        // $visContainer = $('<div/>').appendTo($scrollable).addClass(viscanvasContainerClass).height(this.height);
-
-        // var viscanvasView = opt.view;
-        // var visOptions = {
-        //     root: '.'+viscanvasContainerClass,
-        //     onItemClicked: s.onItemClicked,
-        //     onItemMouseEnter: s.onItemMouseEnter,
-        //     onItemMouseLeave: s.onItemMouseLeave,
-        //     lightBackgroundColor: opt.customOptions.lightBackgroundColor,
-        //     darkBackgroundColor: opt.customOptions.darkBackgroundColor,
-        // };
-        // this.vis = new viscanvasView(visOptions);
 
         this.height = height;
         $visContainer.height(this.height);
@@ -101,6 +76,16 @@ var VisCanvas = (function(){
         $scrollable.scrollTo('top');
         this.vis.update(params);
         $visContainer.height(this.vis.getHeight());
+        return this;
+    };
+
+    var _showMoreData = function(params) {
+        if(this.vis) {
+            this.vis.showMoreData(params)
+            $visContainer.height(this.vis.getHeight());
+            $scrollable.scrollTo($scrollable.scrollTop() + 100)
+
+        }
         return this;
     };
 
@@ -165,12 +150,14 @@ var VisCanvas = (function(){
     };
 
 
+
     VisCanvas.prototype = {
         build: _build,
         update: _update,
         clear: _clear,
         reset: _reset,
         resize: _resize,
+        showMoreData: _showMoreData,
         selectItem: _selectItem,
         deselectAllItems: _deselectAllItems,
         hoverItem: _hoverItem,

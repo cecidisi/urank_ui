@@ -95,7 +95,6 @@ var RangeFilter = (function(){
 			.domain(valRange)
 			.rangeBands([0, width], .01)
 
-
 		var y = d3.scale.linear()
 			.domain([0, d3.max(facetData, function(d){ return d.count })])
 			// .domain([0, facetData[facetData.length - 1].count])
@@ -105,7 +104,6 @@ var RangeFilter = (function(){
 			.scale(x)
 			.orient('bottom')
 			.tickValues(customizeTickValues())
-			// customize ticks
 
 		var yAxis = d3.svg.axis()
 			.scale(y)
@@ -160,7 +158,8 @@ var RangeFilter = (function(){
 		// BRUSH
 		var brushmove = function(){
 
-		}
+		};
+
 		var brushend = function(){
 			var extent = brush.extent();
 			var norm_ext = [extent[0]/width, extent[1]/width]
@@ -169,10 +168,10 @@ var RangeFilter = (function(){
 			});
 			var values = offset_dom.map(function(offset){
 				return Math.round(facetData[0].year + offset)
-			})
-			s.cb.onRangeSelected(values[0], values[1])
+			});
 
-		}
+			s.cb.onRangeSelected(values[0], values[1]);
+		};
 
 	    var brush = d3.svg.brush()
 	        .x(x)

@@ -25,14 +25,18 @@ var Config = {
             urank: null,                  // POST if this one is used, the following 3 are ignored
             update_ranking: null,         // POST
             clear_ranking: null,          // POST
-            show_more_ranking: null,      // POST
+            show_more_data: null,      // POST
             get_document_details: null,   // POST
             get_keyphrases: null,         // GET
             search_features: null,        // GET
             filter_articles_by_year: null // GET
 
         },
-        path_to_results: 'results'      // Path to results in ajax response object
+        path_to: {
+            results: 'results',      // Path to results in ajax response object   
+            count: null              // Total available results 
+        }
+        
     },
     // FEATURES
     features: {
@@ -46,12 +50,13 @@ var Config = {
         title : 'title',
         description : 'description',
         pretty_title: null,
-        pretty_description: null
+        pretty_description: null,
+        bookmarked: 'bookmarked'
     },
     // RANKING MODEL ON CLIENT SIDE (if isLocal == true)
     rankingModel: {            
         useLocal: true,
-        host: '',           // only user if isLocal = false
+        // host: '',           // only user if isLocal = false
         rs : [
             {
                 name: 'CB',
@@ -227,8 +232,11 @@ var Config = {
         onDocViewerHidden: function(){},
         onReset: function(){},
         onRankingWeightChanged: function(rsWeight){},
-        onRatingClicked: function(documentId, index, rating){},
-        onFeatureSearched: function(feature_type, text){}
+        onFeatureTyping: function(){},
+        onFeatureSearched: function(feature){},
+        onFacetFiltered: function(facet){},
+        // Remove
+        onRatingClicked: function(documentId, index, rating){}
     }    
 };
 

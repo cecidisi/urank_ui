@@ -13,8 +13,8 @@ var FeatureSearch = (function() {
 				'type': ''
 			},
 			cb: {
-				onFeatureSearched: function(feature_type, text){},
-				onFeatureSelected: function(feature_type, index, name){}
+				onFeatureTyping: function(feature_type, text){},
+				onFeatureSearched: function(feature_type, index, name){}
 			}
         }, params);
 
@@ -27,7 +27,7 @@ var FeatureSearch = (function() {
 			input : function(evt){
 				evt.stopPropagation();
 				console.log('Text = ' + $(this).val());
-				s.cb.onFeatureSearched(s.options.type, $(this).val())
+				s.cb.onFeatureTyping(s.options.type, $(this).val())
 			},
 			focus: function(evt){
 				evt.stopPropagation()
@@ -39,7 +39,7 @@ var FeatureSearch = (function() {
 			source: [],
 			select: function(evt, ui){
 				console.log(ui.item)
-				s.cb.onFeatureSelected(s.options.type, ui.item.idx, ui.item.value)
+				s.cb.onFeatureSearched(s.options.type, ui.item.idx, ui.item.value)
 				this.value = ''
 			},
 			close: function(el) {

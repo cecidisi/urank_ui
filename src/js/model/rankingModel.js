@@ -10,6 +10,7 @@ var RankingModel = (function() {
     function RankingModel(config, dataConn){
         this.conf = config;
         this.dataConn = dataConn || null;
+        this.maxCount = 50;
         this.clear();
         _this = this;
     }
@@ -155,11 +156,18 @@ var RankingModel = (function() {
         this.conf = params.rs_conf;
         this.rankBy = this.conf.rankBy;
 
-        var onRankingUpdated = function(ranking) {
+        var onRankingUpdated = function(ranking, total) {
+            _this.totalCount = total || ranking.length;
             _this.ranking = ranking;
             _this.status = updateStatus(ranking, _this.status);
-            // onDone(this.ranking, _this.status);
-            onDone(_this.ranking, _this.status);
+            if(_this.conf.useLocal) {
+                var numResults = Math.min(_this.totalCount, _this.maxCount)
+                _this.curCount = numResults;
+                onDone(_this.ranking.slice(0, numResults), _this.status, _this.totalCount);    
+            } else {
+                _this.curCount = _this.ranking.length;
+                onDone(_this.ranking, _this.status, _this.totalCount);
+            }
         };
 
         if(this.conf.useLocal) {
@@ -169,18 +177,42 @@ var RankingModel = (function() {
             onRankingUpdated(ranking);
         } else { 
             // async
-            _this.dataConn.updateRanking(params, function(ranking) {
-                onRankingUpdated(ranking);
+            _this.dataConn.updateRanking(params, function(ranking, total) {
+                onRankingUpdated(ranking, total);
             });    
         }
     };
 
 
+    var _showMore = function(onDone){
+        if(this.conf.useLocal) {
+            var fromIndex = this.curCount;
+            var toIndex = Math.min(this.curCount+this.maxCount, this.totalCount);
+            this.curCount = toIndex;
+            onDone(this.ranking.slice(fromIndex, toIndex))
+
+        } else{
+            var params = { 'current_count': _this.curCount };
+            _this.dataConn.getMoreData(params, function(moreData){
+                _this.ranking = _this.ranking.concat(moreData);
+                _this.curCount = _this.ranking.length;
+                onDone(moreData);
+            })
+
+        }
+    };
+
+    var _checkMoreResultsAvailable = function(){
+        return this.curCount < this.totalCount;
+    };
+
+
     var _reset = function() {
-        this.previousRanking = [];
         this.ranking = [];
         this.status = updateStatus();
         this.query = [];
+        this.curCount = 0;
+        this.totalCount = 0;
         return this;
     };
 
@@ -191,8 +223,8 @@ var RankingModel = (function() {
         this.data = [];
         this.query = [];
         this.status = Globals.RANKING_STATUS.no_ranking;
-        // if(!this.useLocal)
-        //     this.dataConn.clearRanking();
+        this.curCount = 0;
+        this.totalCount = 0;
         return this;
     };
 
@@ -205,15 +237,12 @@ var RankingModel = (function() {
  *
  ****************************************************************************************************/
     RankingModel.prototype = {
-    //return {
-
         setData: _setData,
-
         update: _update,
-
         reset: _reset,
-
         clear: _clear,
+        showMore: _showMore,
+        checkMoreResultsAvailable: _checkMoreResultsAvailable,
 
         getRanking: function() {
             // return this.ranking;
