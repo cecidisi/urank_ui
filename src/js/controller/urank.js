@@ -217,7 +217,7 @@ var Urank = (function() {
         },
 
         onFaviconClicked: function(documentId, index, state){
-            views.contentList.toggleFavicon(documentId, index, state);
+            views.contentList.toggleFavicon(documentId, state);
             callbacks.onFaviconClicked.call(this, { index: index, id: documentId, title: data[index][attr.title], state: state });
         },
 
@@ -850,14 +850,21 @@ var Urank = (function() {
         //visCanvas.destroy();
     };
 
-    var bookmarkItem = function(documentId, index){
-        data[index].bookmarked = true;
-        views.contentList.toggleFavicon(documentId);
+    var bookmarkItem = function(documentId){
+        var index = _.findIndex(data, function(d){ return d.id == documentId })
+        if (index > -1 ) {
+            data[index].bookmarked = true;
+            views.contentList.toggleFavicon(documentId, 'on');  
+        }
     };
 
-    var unbookmarkItem = function(documentId, index){
-        data[index].bookmarked = false;
-        views.contentList.toggleFavicon(documentId);
+    var unbookmarkItem = function(documentId){
+        var index = _.findIndex(data, function(d){ return d.id == documentId })
+        if (index > -1 ) {
+            data[index].bookmarked = false;
+            views.contentList.toggleFavicon(documentId, 'off');  
+        }
+        
     };
 
     //  Miscelaneous

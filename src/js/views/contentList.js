@@ -570,7 +570,7 @@ var ContentList = (function() {
     };
 
 
-    var _toggleFavicon = function(id, index, state){
+    var _toggleFavicon = function(id, state){
         //var favIcon = $(liItem + '' + id).find(' .' + faviconClass);
         var $favIcon = $('.'+liClass+'['+urankIdAttr+'="'+id+'"]').find(' .' + faviconClass);
         var classToAdd = state === 'on' ? onClass : offClass;
