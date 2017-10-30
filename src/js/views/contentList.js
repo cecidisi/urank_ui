@@ -413,6 +413,7 @@ var ContentList = (function() {
         }
         data.forEach(function(d, i) {
             var id = utils.getDeepVal(d, s.attr.id);
+            var pretty_title = s.attr.pretty_title ? utils.getDeepVal(d, s.attr.pretty_title) : utils.getDeepVal(d, s.attr.title);
             var title = utils.getDeepVal(d, s.attr.title);
             var bookmarked = utils.getDeepVal(d, s.attr.bookmarked)
             // li element
@@ -423,7 +424,7 @@ var ContentList = (function() {
             $("<div></div>").appendTo($rankingDiv).addClass(rankingPosMovedClass);
             // title section
             var $titleDiv = $("<div></div>").appendTo($li).addClass(liTitleContainerClass);
-            $('<h3></h3>', { id: 'urank-list-li-title-' + i, class: liTitleClass, html: title/*, title: d[s.attr.title] + '\n' + d.description*/ }).appendTo($titleDiv);
+            $('<h3></h3>', { id: 'urank-list-li-title-' + i, class: liTitleClass, html: pretty_title, title: title }).appendTo($titleDiv);
             // buttons section
             var $buttonsDiv = $("<div></div>").appendTo($li).addClass(liButtonsContainerClass);
             if(s.options.showWatchIcon) {

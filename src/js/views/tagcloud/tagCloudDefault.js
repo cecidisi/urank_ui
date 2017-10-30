@@ -570,14 +570,11 @@ var TagCloudDefault = (function(){
 
     var _focusTag = function(keyword/*, newOffset*/) {
         var $tag = $('#urank-tag-' + keyword.id);
-        // var $tag = $('.'+tagClass + '[tag-pos=' + keyword.index + ']');
         $tag.addClass(focusedClass).removeClass(hiddenClass); //.show();
-
         setTimeout(function(){
             $tag.removeClass(focusedClass, 2000);
         }, 2000);
         $scrollable.scrollTo('#urank-tag-' + keyword.id, { offsetTop: 10 });
-        // $scrollable.scrollTo('.'+tagClass + '[tag-pos=' + keyword.index + ']', { offsetTop: 10 });
         return this;
     };
 
