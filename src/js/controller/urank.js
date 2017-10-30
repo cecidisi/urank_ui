@@ -598,13 +598,16 @@ var Urank = (function() {
                 'current_count': data.length
             }, function(moreData){
                 console.log('Received ' + moreData.length + ' more results')
-                views.contentList.showMoreData(moreData);
-                views.visCanvas.showMoreData({
-                    'data': moreData,
-                    'listHeight': views.contentList.getListHeight()
-                });
-
                 data = data.concat(moreData);
+                views.contentList.showMoreData(moreData);
+                if(status) {
+                    views.visCanvas.showMoreData({
+                        'data': moreData,
+                        'listHeight': views.contentList.getListHeight()
+                    });    
+                } else {
+                    views.visCanvas.build(data, views.contentList.getListHeight())
+                }
             })
 
         },
@@ -639,19 +642,17 @@ var Urank = (function() {
             for(var feature in _this.selectedFeatures) {
                 if(_this.selectedFeatures[feature].length) {
                     _this.selectedFeatures[feature].forEach(function(tag, i){
-                        setTimeout(function(){
-                            if(feature === 'keywords') {
-                                views.tagCloud.restoreTag(tag.index, tag.id);    
-                            } else {
-                                if(feature === 'neighbors') {
-                                    views.neighborsCloud.restoreTag(tag.index, tag.id)
-                                } else if (feature === 'usertags') {
-                                    views.usertagBox.restoreTag(tag.index, tag.id);
-                                }
+                        if(feature === 'keywords') {
+                            // setTimeout(function() {
+                                views.tagCloud.restoreTag(tag, tag.index);
+                        } else {
+                            if(feature === 'neighbors') {
+                                views.neighborsCloud.restoreTag(tag.index, tag.id)
+                            } else if (feature === 'usertags') {
+                                views.usertagBox.restoreTag(tag.index, tag.id);
                             }
-                            views.tagBox.deleteTag(tag);
-                            
-                        }, (i+1)*50);
+                        }
+                        views.tagBox.deleteTag(tag);
                     });
                     _this.selectedFeatures[feature] = []    
                 }

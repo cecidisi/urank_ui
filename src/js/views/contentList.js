@@ -468,7 +468,9 @@ var ContentList = (function() {
         buildEntries(moreData, true, true);
         this.data = this.data.concat(moreData)
         updateLiBackground();
-        showRankingPositions();
+        // Check if ranking exists
+        if(this.data[0].ranking)
+            showRankingPositions();
     };
 
     /**

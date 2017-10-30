@@ -182,15 +182,17 @@ var Ranking = (function(){
                 .call(yAxis)
                 .selectAll("text");
 
+            // RANKING.Render.updateCanvasDimensions(containerHeight);
+
             var stackedBars = svg.selectAll('.'+stackedbarClass)
-            .data(data).enter()
-            .append("g")
-            .attr("class", stackedbarClass)
-            .attr("id", function(d){ return "urank-ranking-stackedbar-" + d[s.attr.id]; })
-            .attr( "transform", function(d) {return "translate(0, " + y(d[s.attr.id]) + ")"; })
-            .on('click', RANKING.Evt.itemClicked)
-            .on('mouseover', RANKING.Evt.itemMouseEntered)
-            .on('mouseout', RANKING.Evt.itemMouseLeft);
+                .data(data).enter()
+                .append("g")
+                .attr("class", stackedbarClass)
+                .attr("id", function(d){ return "urank-ranking-stackedbar-" + d[s.attr.id]; })
+                .attr( "transform", function(d) {return "translate(0, " + y(d[s.attr.id]) + ")"; })
+                .on('click', RANKING.Evt.itemClicked)
+                .on('mouseover', RANKING.Evt.itemMouseEntered)
+                .on('mouseout', RANKING.Evt.itemMouseLeft);
 
             stackedBars.append('rect')
                 .attr('class', function(d, i){ return (i%2) ? backgroundClass+' '+darkBackgroundClass : backgroundClass+' '+lightBackgroundClass; })
@@ -204,8 +206,11 @@ var Ranking = (function(){
                 }
                 return  '';
             });
+            _this.isRankingDrawn = false;
             return this;
         },
+
+
 
         addMoreEntries: function(moreData, ranking, features, conf, rankBy, listHeight) {
             moreData = RANKING.Settings.getExtendedData({
@@ -250,7 +255,7 @@ var Ranking = (function(){
         *	Redraw updated ranking and animate with transitions to depict changes
         *
         * ***************************************************************************************************************/
-        redrawUpdated: function(params){
+        redrawUpdated: function(params) {
             data = RANKING.Settings.getExtendedData(params);   //(params.ranking, ranking_conf);
 //            width = $root.width();
             RANKING.Render.updateCanvasDimensions(params.listHeight);
@@ -277,6 +282,7 @@ var Ranking = (function(){
                 .selectAll("g").delay(delay);
 
             RANKING.Render.drawStackedBars();
+            _this.isRankingDrawn = true
 
             ////////////////////////////////////////
             // CHECK IF THIS NEEDS TO BE ENABLED!!
@@ -476,6 +482,7 @@ var Ranking = (function(){
         *
         * ***************************************************************************************************************/
         createBarHoverGradient: function(){
+            d3.select('defs').remove();
             var defs = svg.append("defs");
             var linearGradient = defs.append('linearGradient').attr('id', 'bar-shadow').attr('x1', '0%').attr('y1', '0%').attr('x2', '0%').attr('y2', '100%');
             // linearGradient.append('stop').attr('offset', '25%').style('stop-color', 'rgba(150,150,150,0.3)');
@@ -584,11 +591,21 @@ var Ranking = (function(){
         return this;
     };
 
+
     var _showMoreData = function(params){
         var moreData = params.data;
         var listHeight = params.listHeight;
 
-        RANKING.Render.addMoreEntries(moreData, ranking, features, conf, rankBy, listHeight);
+        if(_this.isRankingDrawn){
+            RANKING.Render.addMoreEntries(moreData, ranking, features, conf, rankBy, listHeight);
+        }
+        else {
+            if(!data || data.length == 0 ) {
+                data = _this.originalData;
+            }
+            data = data.concat(moreData)
+            RANKING.Render.drawNew(data, listHeight).createBarHoverGradient();
+        }
     };
 
 
