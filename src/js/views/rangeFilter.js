@@ -193,7 +193,7 @@ var RangeFilter = (function(){
 
 		gBrush.selectAll('.extent')
 			.style('fill', 'rgb(66, 146, 198)')
-			.style('opacity', .4)
+			.style('opacity', .2)
 
 	    gBrush.selectAll(".resize")
 			.append("path")

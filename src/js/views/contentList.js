@@ -426,7 +426,9 @@ var ContentList = (function() {
             $('<h3></h3>', { id: 'urank-list-li-title-' + i, class: liTitleClass, html: title/*, title: d[s.attr.title] + '\n' + d.description*/ }).appendTo($titleDiv);
             // buttons section
             var $buttonsDiv = $("<div></div>").appendTo($li).addClass(liButtonsContainerClass);
-            $("<span>").appendTo($buttonsDiv).addClass(watchiconClass+' '+watchiconDefaultClass+' '+offClass);
+            if(s.options.showWatchIcon) {
+                $("<span>").appendTo($buttonsDiv).addClass(watchiconClass+' '+watchiconDefaultClass+' '+offClass);    
+            }            
             var favIconStateClass = bookmarked ? onClass : offClass;
             $("<span>").appendTo($buttonsDiv).addClass(faviconClass+' '+faviconDefaultClass+' '+favIconStateClass);
             if(fadeIn) {

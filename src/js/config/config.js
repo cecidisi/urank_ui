@@ -157,6 +157,7 @@ var Config = {
         },
         header: false,                   // boolean
         custom: false,
+        showWatchIcon: true,
         customOptions: {                //  only used when contentListType.custom = true
             selectors: {
                 root: '',
