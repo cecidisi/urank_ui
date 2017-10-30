@@ -31,8 +31,8 @@ var Urank = (function() {
                 callbacks.onFeatureTyping.call(this, feature_type, text)    
             }
         },
-        onFeatureSearched: function(feature_type, index, name){
-            URANK.addNewFeature(feature_type, index, name);
+        onFeatureSearched: function(feature_type, feature /*index*/ /*id, name*/){
+            URANK.addNewFeature(feature_type, feature);
 
         },
         // TAGCLOUD
@@ -674,18 +674,20 @@ var Urank = (function() {
                 function(feature_list) {
                     _this.searchedFeatures = feature_list.slice();
                     feature_list = feature_list.map(function(f, i){
-                        return { label: f.term, idx: i }
+                        return $.extend(f, { label: f.term, idx: i })
                     });
                     views.featureSearch.populateFeatureMenu(feature_type, feature_list);
                 }
             )
         },
 
-        addNewFeature: function(feature_type, index, name) {
+        addNewFeature: function(feature_type, feature/*id, name*/) {
             if(feature_type == 'keyword') {
                 // Update keyphrases for newly added keyword
-                var keyword = _this.searchedFeatures[index]
+                // var keyword = _this.searchedFeatures[index]
+                var keyword = feature
                 dataConn.getKeyphrases({ 'kw_id': keyword.id }, function(keyphrases){
+                    // need to get full keyword!!
                     keyword.phrases = keyphrases;
                     _this.keywords.push(keyword);
                     // k, i, prepend = true, animate = true

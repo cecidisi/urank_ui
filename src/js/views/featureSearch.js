@@ -39,7 +39,8 @@ var FeatureSearch = (function() {
 			source: [],
 			select: function(evt, ui){
 				console.log(ui.item)
-				s.cb.onFeatureSearched(s.options.type, ui.item.idx, ui.item.value)
+				s.cb.onFeatureSearched(s.options.type, ui.item)
+				// s.cb.onFeatureSearched(s.options.type, ui.item.idx, ui.item.value)
 				this.value = ''
 			},
 			close: function(el) {
