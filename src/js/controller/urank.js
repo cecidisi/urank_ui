@@ -669,6 +669,7 @@ var Urank = (function() {
         },
 
         searchFeature(feature_type, text) {
+            if(text.length < 2) return;
             dataConn.searchFeature({ 'feature_type': feature_type, 'text': text }, 
                 function(feature_list) {
                     _this.searchedFeatures = feature_list.slice();
