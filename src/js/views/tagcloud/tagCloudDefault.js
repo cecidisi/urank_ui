@@ -569,14 +569,15 @@ var TagCloudDefault = (function(){
 
 
     var _focusTag = function(keyword/*, newOffset*/) {
-        var $tag = $('.'+tagClass + '[tag-pos=' + keyword.index + ']');
+        var $tag = $('#urank-tag-' + keyword.id);
+        // var $tag = $('.'+tagClass + '[tag-pos=' + keyword.index + ']');
         $tag.addClass(focusedClass).removeClass(hiddenClass); //.show();
 
         setTimeout(function(){
             $tag.removeClass(focusedClass, 2000);
-        }, 5000);
-
-        $scrollable.scrollTo('.'+tagClass + '[tag-pos=' + keyword.index + ']', { offsetTop: 10 });
+        }, 2000);
+        $scrollable.scrollTo('#urank-tag-' + keyword.id, { offsetTop: 10 });
+        // $scrollable.scrollTo('.'+tagClass + '[tag-pos=' + keyword.index + ']', { offsetTop: 10 });
         return this;
     };
 

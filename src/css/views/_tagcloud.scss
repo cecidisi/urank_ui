@@ -244,7 +244,8 @@
         }
 
         &.focused {
-            color: yellow;
+            // color: yellow;
+            background: rgba(255,255,0,0.4);
         }
         
         &.selected, &.added {

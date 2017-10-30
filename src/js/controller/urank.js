@@ -686,18 +686,23 @@ var Urank = (function() {
                 // Update keyphrases for newly added keyword
                 // var keyword = _this.searchedFeatures[index]
                 var keyword = feature
-                dataConn.getKeyphrases({ 'kw_id': keyword.id }, function(keyphrases){
-                    // need to get full keyword!!
-                    keyword.phrases = keyphrases;
-                    _this.keywords.push(keyword);
-                    // k, i, prepend = true, animate = true
-                    views.tagCloud.addTag(keyword, _this.keywords.length-1, true, true)
-
-                    var obj = { 'id': keyword.id, 'index': _this.keywords.length-1, 'name': name }
-                    callbacks.onFeatureSearched(obj)
-                })                
+                var idx = _.findIndex(_this.keywords, function(k){ return k.id == keyword.id });
+                // keyword not loaded yet, fetch
+                if(idx == -1) {
+                    dataConn.getKeyphrases({ 'kw_id': keyword.id }, function(keyphrases){
+                        // need to get full keyword!!
+                        keyword.phrases = keyphrases;
+                        _this.keywords.push(keyword);
+                        // k, i, prepend = true, animate = true
+                        views.tagCloud.addTag(keyword, _this.keywords.length-1, true, true)
+                    })                    
+                }  // Keyword already loaded, focus and scroll to it
+                else {
+                    views.tagCloud.focusTag(keyword);
+                }
+                var obj = { 'id': keyword.id, 'index': _this.keywords.length-1, 'name': name }
+                callbacks.onFeatureSearched(obj)
             }
-
         },
 
         filterByYear: function(from_year, to_year) {
