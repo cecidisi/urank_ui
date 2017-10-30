@@ -599,14 +599,18 @@ var Urank = (function() {
             }, function(moreData){
                 console.log('Received ' + moreData.length + ' more results')
                 data = data.concat(moreData);
-                views.contentList.showMoreData(moreData);
+                // views.contentList.showMoreData(moreData);
                 if(status) {
+                    console.log('showMore with ranking')
+                    views.contentList.showMoreData(moreData);
                     views.visCanvas.showMoreData({
                         'data': moreData,
                         'listHeight': views.contentList.getListHeight()
                     });    
                 } else {
-                    views.visCanvas.build(data, views.contentList.getListHeight())
+                    console.log('showMore without ranking')
+                    views.contentList.build(data.slice(), views.tagBox.getHeight());
+                    views.visCanvas.build(data.slice(), views.contentList.getListHeight())
                 }
             })
 
@@ -700,20 +704,28 @@ var Urank = (function() {
                     data = _ranking;
                     // status = _status;
                     // Update views
-                    views.contentList.update({ 
-                        ranking: data.slice(),
-                        status: status
-                    });
-                    views.visCanvas.update({
-                        status: status,
-                        ranking: data.slice(),
-                        conf: rankingConf,
-                        // query: _this.selectedKeywords,
-                        features: _this.selectedFeatures,
-                        // query: _this.selectedFeatures.keywords,
-                        colorScale: colorScales.query,
-                        listHeight: views.contentList.getListHeight()
-                    });
+                    if(status) {
+                        console.log('filterByYear with ranking')
+                        views.contentList.update({ 
+                            ranking: data.slice(),
+                            status: status
+                        });
+                        views.visCanvas.update({
+                            status: status,
+                            ranking: data.slice(),
+                            conf: rankingConf,
+                            // query: _this.selectedKeywords,
+                            features: _this.selectedFeatures,
+                            // query: _this.selectedFeatures.keywords,
+                            colorScale: colorScales.query,
+                            listHeight: views.contentList.getListHeight()
+                        });    
+                    } else {
+                        console.log('filterByYear without ranking')
+                        views.contentList.build(data.slice(), views.tagBox.getHeight())
+                        views.visCanvas.build(data.slice(), views.contentList.getListHeight())
+                    }
+                    
                     views.docViewer.clear();
                     views.tagCloud.clearEffects();
 
