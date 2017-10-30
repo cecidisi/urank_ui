@@ -159,6 +159,7 @@ var Ranking = (function(){
                 .orient("left")
                 .tickValues("");
 
+            d3.select('.'+svgClass).remove();
             // Draw chart main components
             //// Add svg main components
             svg = d3.select(s.root).append("svg")
@@ -598,7 +599,9 @@ var Ranking = (function(){
     };
 
 
-    var _reset = function() {
+    var _reset = function(listHeight) {
+        // if(listHeight)
+        //     _this.originalHeight = listHeight;
         _this.clear();
         _this.build(_this.originalData, _this.originalHeight);
         return this;

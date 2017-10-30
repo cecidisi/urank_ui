@@ -636,24 +636,29 @@ var Urank = (function() {
             //tagCloud.reset();
             views.visCanvas.reset();
             views.docViewer.clear();
-            for(var feature in _this.selectedFeatures){
-                _this.selectedFeatures[feature].forEach(function(tag, i){
-                    setTimeout(function(){
-                        if(feature === 'keywords') {
-                            views.tagCloud.restoreTag(tag.index, tag.id);    
-                        } else if(feature === 'neighbors') {
-                            views.neighborsCloud.restoreTag(tag.index, tag.id)
-                        } else if (feature === 'usertags') {
-                            views.usertagBox.restoreTag(tag.index, tag.id);
-                        }
-                        views.tagBox.deleteTag(tag);
-                        
-                    }, (i+1)*50);
-                });    
+            for(var feature in _this.selectedFeatures) {
+                if(_this.selectedFeatures[feature].length) {
+                    _this.selectedFeatures[feature].forEach(function(tag, i){
+                        setTimeout(function(){
+                            if(feature === 'keywords') {
+                                views.tagCloud.restoreTag(tag.index, tag.id);    
+                            } else {
+                                if(feature === 'neighbors') {
+                                    views.neighborsCloud.restoreTag(tag.index, tag.id)
+                                } else if (feature === 'usertags') {
+                                    views.usertagBox.restoreTag(tag.index, tag.id);
+                                }
+                            }
+                            views.tagBox.deleteTag(tag);
+                            
+                        }, (i+1)*50);
+                    });
+                    _this.selectedFeatures[feature] = []    
+                }
+                
             }
             
-            // _this.selectedKeywords = [];
-            _this.selectedFeatures.keywords = [];
+            // _this.selectedFeatures.keywords = [];
             dataConn.getData(URANK.loadData)
             callbacks.onReset.call(this);
         },
