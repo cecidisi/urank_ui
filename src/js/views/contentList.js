@@ -381,12 +381,13 @@ var ContentList = (function() {
         $root.find('.'+listContainerClass).remove();
         $root.find('.'+hiddenScrollbarInnerClass).remove();
 
-        $listContainer = $('<div/>').appendTo($root).addClass(listContainerClass + ' ' + hiddenScrollbarClass);
+        $listContainer = $('<div/>').appendTo($root)
+            .addClass(listContainerClass + ' ' + hiddenScrollbarClass);
         $scrollable = $('<div/>').appendTo($root)
             .addClass(hiddenScrollbarInnerClass)
             .on('scroll', onScroll);
 
-        $ul = $('<ul></ul>').appendTo($scrollable).addClass(ulClass +' '+ ulClassDefault);
+        $ul = $('<ul/>').appendTo($scrollable).addClass(ulClass +' '+ ulClassDefault);
 
         _this.data.forEach(function(d, i){ d.index = i });
         buildEntries(_this.data);

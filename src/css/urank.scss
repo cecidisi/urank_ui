@@ -44,11 +44,11 @@
 .urank-hidden-scrollbar-inner {
     height: 100%;
     // margin: 1px;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
     // margin-right: -84px;
     margin-right: -100px;
-    padding-right: 84px;
+    padding-right: 100px;
 }
 /*
 .urank-hidden-scrollbar-inner:before,
